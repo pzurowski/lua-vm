@@ -5,6 +5,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc && tsc-alias",
+    "prepare": "npm run build",
     "test": "jest",
     "buildjs": "node build.js",
     "lint": "eslint .",
