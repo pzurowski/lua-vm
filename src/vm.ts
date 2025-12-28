@@ -115,6 +115,10 @@ class ExecutionResult {
   globalVar(name: string): Value {
     return this.globalVars.get(StringValue.from(name));
   }
+
+  globalVarKeys(): Value[] {
+    return this.globalVars.getKeys();
+  }
 }
 
 export { VMBuilder, VM };
