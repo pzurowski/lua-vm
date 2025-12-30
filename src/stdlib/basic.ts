@@ -172,15 +172,52 @@ function type(args: Value[]): Value[] {
   throw new ExtFunctionError(`Unexpected type ${val.constructor.name}`);
 }
 
+function getMetatable(args: Value[]): Value[] {
+  try {
+    const val = getOrNil(args, 0);
+    return [val.getMetatable()];
+  } catch (e) {
+    if (typeof e === 'string') {
+      throw new ExtFunctionError(e);
+    }
+
+    throw e;
+  }
+}
+
+function setMetatable(args: Value[]): Value[] {
+  const table = getOrNil(args, 0);
+  const metatable = getOrNil(args, 1);
+
+  if (!(metatable instanceof TableValue) && !(metatable instanceof NilValue)) {
+    throw new ExtFunctionError(
+      `Cannot execute setmetatable on non-table metatable, got ${metatable.constructor.name}`
+    );
+  }
+
+  try {
+    table.setMetatable(metatable);
+    return [];
+  } catch (e) {
+    if (e instanceof Error) {
+      throw new ExtFunctionError(e.message);
+    }
+
+    throw e;
+  }
+}
+
 const basicStdLib = new TableValue();
 basicStdLib.set(StringValue.from('assert'), ExtFunction.of(assert));
 basicStdLib.set(StringValue.from('error'), ExtFunction.of(error));
+basicStdLib.set(StringValue.from('getmetatable'), ExtFunction.of(getMetatable));
 basicStdLib.set(StringValue.from('ipairs'), ExtFunction.of(ipairs));
 basicStdLib.set(StringValue.from('next'), ExtFunction.of(next));
 basicStdLib.set(StringValue.from('pairs'), ExtFunction.of(pairs));
 basicStdLib.set(StringValue.from('pcall'), ExtFunction.WithInterpreter(pcall));
 basicStdLib.set(StringValue.from('print'), ExtFunction.of(print));
 basicStdLib.set(StringValue.from('select'), ExtFunction.of(select));
+basicStdLib.set(StringValue.from('setmetatable'), ExtFunction.of(setMetatable));
 basicStdLib.set(StringValue.from('tonumber'), ExtFunction.of(toNumber));
 basicStdLib.set(StringValue.from('tostring'), ExtFunction.of(toString));
 basicStdLib.set(StringValue.from('type'), ExtFunction.of(type));

@@ -37,7 +37,7 @@ describe('metatable', () => {
         r8 = c // b
     `;
 
-    const result = new VMBuilder().build().executeOnce(lua);
+    const result = new VMBuilder().witStdLib().build().executeOnce(lua);
 
     expectToBeString(result.globalVar('r1'), 'add');
     expectToBeString(result.globalVar('r2'), 'sub');
@@ -72,7 +72,7 @@ describe('metatable', () => {
         r6 = ~a
     `;
 
-    const result = new VMBuilder().build().executeOnce(lua);
+    const result = new VMBuilder().witStdLib().build().executeOnce(lua);
 
     expectToBeString(result.globalVar('r1'), 'band');
     expectToBeString(result.globalVar('r2'), 'bor');
@@ -102,7 +102,7 @@ describe('metatable', () => {
         r5 = a >= b
     `;
 
-    const result = new VMBuilder().build().executeOnce(lua);
+    const result = new VMBuilder().witStdLib().build().executeOnce(lua);
 
     expectToBeBool(result.globalVar('r1'), true);
     expectToBeBool(result.globalVar('r2'), false);
@@ -143,7 +143,7 @@ describe('metatable', () => {
         r8 = t3.z
     `;
 
-    const result = new VMBuilder().build().executeOnce(lua);
+    const result = new VMBuilder().witStdLib().build().executeOnce(lua);
 
     expectToBeNumber(result.globalVar('r1'), 1);
     expectToBeNumber(result.globalVar('r2'), 2);
@@ -189,7 +189,7 @@ describe('metatable', () => {
         r6 = t3.baz
     `;
 
-    const result = new VMBuilder().build().executeOnce(lua);
+    const result = new VMBuilder().witStdLib().build().executeOnce(lua);
 
     expectToBeNumber(result.globalVar('r1'), 10); // should be updated in t because it existed
     expectToBeNil(result.globalVar('r2')); // should NOT be updated in t
@@ -232,7 +232,7 @@ describe('metatable', () => {
         t_rec("A")
     `;
 
-    const result = new VMBuilder().build().executeOnce(lua);
+    const result = new VMBuilder().witStdLib().build().executeOnce(lua);
 
     expectToBeNumber(result.globalVar('r1'), 13);
     expectToBeNumber(result.globalVar('r2'), 103);
@@ -256,7 +256,7 @@ describe('metatable', () => {
         r4 = #a
     `;
 
-    const result = new VMBuilder().build().executeOnce(lua);
+    const result = new VMBuilder().witStdLib().build().executeOnce(lua);
 
     expectToBeString(result.globalVar('r1'), 'concat');
     expectToBeString(result.globalVar('r2'), 'concat');
@@ -274,7 +274,7 @@ describe('metatable', () => {
         r3 = getmetatable({})
     `;
 
-    const result = new VMBuilder().build().executeOnce(lua);
+    const result = new VMBuilder().witStdLib().build().executeOnce(lua);
 
     const r1 = result.globalVar('r1');
     expect(r1).toBeInstanceOf(TableValue);
