@@ -79,4 +79,9 @@ export default class ExtFunction extends Value {
   getMetatable(): TableValue | NilValue {
     return new NilValue();
   }
+
+  setMetatable(value: TableValue | NilValue): void {
+    void value;
+    throw new Error(`Cannot set metatable on ${this.constructor.name} value`);
+  }
 }

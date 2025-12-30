@@ -5,6 +5,7 @@ abstract class Value {
   abstract asIdString(): string;
   abstract toString(): string;
   abstract getMetatable(): TableValue | NilValue;
+  abstract setMetatable(value: TableValue | NilValue): void;
 }
 
 class NilValue extends Value {
@@ -18,6 +19,11 @@ class NilValue extends Value {
 
   getMetatable(): TableValue | NilValue {
     return new NilValue();
+  }
+
+  setMetatable(value: TableValue | NilValue): void {
+    void value;
+    throw new Error(`Cannot set metatable on ${this.constructor.name} value`);
   }
 }
 
@@ -49,6 +55,11 @@ class NumberValue extends Value {
   getMetatable(): TableValue | NilValue {
     return new NilValue();
   }
+
+  setMetatable(value: TableValue | NilValue): void {
+    void value;
+    throw new Error(`Cannot set metatable on ${this.constructor.name} value`);
+  }
 }
 
 class StringValue extends Value {
@@ -78,6 +89,11 @@ class StringValue extends Value {
 
   getMetatable(): TableValue | NilValue {
     return new NilValue();
+  }
+
+  setMetatable(value: TableValue | NilValue): void {
+    void value;
+    throw new Error(`Cannot set metatable on ${this.constructor.name} value`);
   }
 }
 
@@ -181,6 +197,11 @@ class BooleanValue extends Value {
   getMetatable(): TableValue | NilValue {
     return new NilValue();
   }
+
+  setMetatable(value: TableValue | NilValue): void {
+    void value;
+    throw new Error(`Cannot set metatable on ${this.constructor.name} value`);
+  }
 }
 
 class FunctionValue extends Value {
@@ -213,6 +234,11 @@ class FunctionValue extends Value {
 
   getMetatable(): TableValue | NilValue {
     return new NilValue();
+  }
+
+  setMetatable(value: TableValue | NilValue): void {
+    void value;
+    throw new Error(`Cannot set metatable on ${this.constructor.name} value`);
   }
 }
 
@@ -259,6 +285,11 @@ class InternalListValue extends Value {
   getMetatable(): TableValue | NilValue {
     throw new Error('Not implemented');
   }
+
+  setMetatable(value: TableValue | NilValue): void {
+    void value;
+    throw new Error('Not implemented');
+  }
 }
 
 class InternalPairValue extends Value {
@@ -302,6 +333,11 @@ class InternalPairValue extends Value {
   getMetatable(): TableValue | NilValue {
     throw new Error('Not implemented');
   }
+
+  setMetatable(value: TableValue | NilValue): void {
+    void value;
+    throw new Error('Not implemented');
+  }
 }
 
 class InternalVar extends Value {
@@ -327,6 +363,11 @@ class InternalVar extends Value {
   getMetatable(): TableValue | NilValue {
     throw new Error('Not implemented');
   }
+
+  setMetatable(value: TableValue | NilValue): void {
+    void value;
+    throw new Error('Not implemented');
+  }
 }
 
 class InterpreterValue extends Value {
@@ -348,6 +389,11 @@ class InterpreterValue extends Value {
   }
 
   getMetatable(): TableValue | NilValue {
+    throw new Error('Not implemented');
+  }
+
+  setMetatable(value: TableValue | NilValue): void {
+    void value;
     throw new Error('Not implemented');
   }
 }

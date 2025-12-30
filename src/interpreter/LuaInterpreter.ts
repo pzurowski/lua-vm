@@ -1095,35 +1095,6 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       : this.exec_ext_function(f as ExtFunction, args, ctx);
   }
 
-  exec_setmetatable(list_args: InternalListValue, ctx: Fcall_nameContext) {
-    const table = list_args.get(1);
-    const metatable = list_args.get(2);
-
-    if (!(table instanceof TableValue)) {
-      // throw new RuntimeError(`Cannot execute setmetatable on non-table value ${table}`, ctx)
-      return new NilValue();
-    }
-
-    if (
-      !(metatable instanceof TableValue) &&
-      !(metatable instanceof NilValue)
-    ) {
-      throw new RuntimeError(
-        `Cannot execute setmetatable on non-table metatable ${metatable}`,
-        ctx
-      );
-    }
-
-    table.setMetatable(metatable);
-    return new NilValue();
-  }
-
-  exec_getmetatable(list_args: InternalListValue) {
-    const table = list_args.get(1);
-
-    return table.getMetatable();
-  }
-
   private callValue(
     value: Value,
     args: InternalListValue,
@@ -1161,12 +1132,6 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       ctx
     );
     const list_args = ctx.args().accept(this) as InternalListValue;
-    if (fname === 'setmetatable') {
-      return this.exec_setmetatable(list_args, ctx);
-    }
-    if (fname === 'getmetatable') {
-      return this.exec_getmetatable(list_args);
-    }
     return this.callValue(value, list_args, ctx);
   };
 
