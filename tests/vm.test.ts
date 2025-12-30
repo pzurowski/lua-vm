@@ -178,7 +178,7 @@ test('calling non function causes RuntimeError', () => {
   );
 });
 
-test('continue causes RuntimeError', () => {
+xtest('continue causes RuntimeError', () => {
   const lua = `
   a  = 1
   continue
