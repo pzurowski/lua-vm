@@ -30,21 +30,16 @@ import { VarlistContext } from "./LuaParser.js";
 import { NamelistContext } from "./LuaParser.js";
 import { ExplistContext } from "./LuaParser.js";
 import { Exp_trueContext } from "./LuaParser.js";
-import { Exp_bitsContext } from "./LuaParser.js";
 import { Exp_andContext } from "./LuaParser.js";
 import { Exp_stringContext } from "./LuaParser.js";
-import { Exp_arithmetic_highContext } from "./LuaParser.js";
-import { Exp_relContext } from "./LuaParser.js";
 import { Stat_table_construnctorContext } from "./LuaParser.js";
-import { Exp_unaryContext } from "./LuaParser.js";
+import { Op_binaryContext } from "./LuaParser.js";
+import { Op_unaryContext } from "./LuaParser.js";
 import { Exp_orContext } from "./LuaParser.js";
 import { Exp_falseContext } from "./LuaParser.js";
 import { Stat_prefix_expContext } from "./LuaParser.js";
-import { Exp_exponentContext } from "./LuaParser.js";
 import { Exp_numberContext } from "./LuaParser.js";
-import { Exp_concatContext } from "./LuaParser.js";
 import { Exp_varargContext } from "./LuaParser.js";
-import { Exp_arithmetic_lowContext } from "./LuaParser.js";
 import { Exp_function_defContext } from "./LuaParser.js";
 import { Exp_nilContext } from "./LuaParser.js";
 import { Var_nameContext } from "./LuaParser.js";
@@ -268,13 +263,6 @@ export default class LuaParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	visitExp_true?: (ctx: Exp_trueContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `exp_bits`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitExp_bits?: (ctx: Exp_bitsContext) => Result;
-	/**
 	 * Visit a parse tree produced by the `exp_and`
 	 * labeled alternative in `LuaParser.exp`.
 	 * @param ctx the parse tree
@@ -289,20 +277,6 @@ export default class LuaParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	visitExp_string?: (ctx: Exp_stringContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `exp_arithmetic_high`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitExp_arithmetic_high?: (ctx: Exp_arithmetic_highContext) => Result;
-	/**
-	 * Visit a parse tree produced by the `exp_rel`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitExp_rel?: (ctx: Exp_relContext) => Result;
-	/**
 	 * Visit a parse tree produced by the `stat_table_construnctor`
 	 * labeled alternative in `LuaParser.exp`.
 	 * @param ctx the parse tree
@@ -310,12 +284,19 @@ export default class LuaParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	visitStat_table_construnctor?: (ctx: Stat_table_construnctorContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `exp_unary`
+	 * Visit a parse tree produced by the `op_binary`
 	 * labeled alternative in `LuaParser.exp`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitExp_unary?: (ctx: Exp_unaryContext) => Result;
+	visitOp_binary?: (ctx: Op_binaryContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `op_unary`
+	 * labeled alternative in `LuaParser.exp`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitOp_unary?: (ctx: Op_unaryContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `exp_or`
 	 * labeled alternative in `LuaParser.exp`.
@@ -338,13 +319,6 @@ export default class LuaParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	visitStat_prefix_exp?: (ctx: Stat_prefix_expContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `exp_exponent`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitExp_exponent?: (ctx: Exp_exponentContext) => Result;
-	/**
 	 * Visit a parse tree produced by the `exp_number`
 	 * labeled alternative in `LuaParser.exp`.
 	 * @param ctx the parse tree
@@ -352,26 +326,12 @@ export default class LuaParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	visitExp_number?: (ctx: Exp_numberContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `exp_concat`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitExp_concat?: (ctx: Exp_concatContext) => Result;
-	/**
 	 * Visit a parse tree produced by the `exp_vararg`
 	 * labeled alternative in `LuaParser.exp`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitExp_vararg?: (ctx: Exp_varargContext) => Result;
-	/**
-	 * Visit a parse tree produced by the `exp_arithmetic_low`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitExp_arithmetic_low?: (ctx: Exp_arithmetic_lowContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `exp_function_def`
 	 * labeled alternative in `LuaParser.exp`.

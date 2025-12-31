@@ -8,20 +8,13 @@ import {
   BlockContext,
   ChunkContext,
   Exp_andContext,
-  Exp_arithmetic_highContext,
-  Exp_arithmetic_lowContext,
-  Exp_bitsContext,
-  Exp_concatContext,
-  Exp_exponentContext,
   Exp_falseContext,
   Exp_function_defContext,
   Exp_nilContext,
   Exp_numberContext,
   Exp_orContext,
-  Exp_relContext,
   Exp_stringContext,
   Exp_trueContext,
-  Exp_unaryContext,
   Exp_varargContext,
   ExpContext,
   ExplistContext,
@@ -45,6 +38,8 @@ import {
   Number_hex_floatContext,
   Number_hexContext,
   Number_intContext,
+  Op_binaryContext,
+  Op_unaryContext,
   Parlist_namellistContext,
   Parlist_noneContext,
   Parlist_varargContext,
@@ -456,27 +451,6 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     return BooleanValue.true();
   };
 
-  visitExp_bits = (ctx: Exp_bitsContext): Value => {
-    this.consumeCredit(ctx);
-    const left = firstValue(ctx.exp(0).accept(this));
-    const right = firstValue(ctx.exp(1).accept(this));
-
-    let op: string;
-    if (ctx.AMP()) {
-      op = '__band';
-    } else if (ctx.PIPE()) {
-      op = '__bor';
-    } else if (ctx.SQUIG()) {
-      op = '__bxor';
-    } else if (ctx.GG()) {
-      op = '__shr';
-    } else {
-      op = '__shl';
-    }
-
-    return this.exec_operator(left, right, op, ctx);
-  };
-
   visitExp_and = (ctx: Exp_andContext): Value => {
     this.consumeCredit(ctx);
     const left = firstValue(ctx.exp(0).accept(this));
@@ -494,84 +468,6 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     return ctx.string_().accept(this);
   };
 
-  visitExp_arithmetic_high = (ctx: Exp_arithmetic_highContext): Value => {
-    this.consumeCredit(ctx);
-    const left = firstValue(ctx.exp(0).accept(this));
-    const right = firstValue(ctx.exp(1).accept(this));
-
-    let op: string;
-    if (ctx.STAR()) {
-      op = '__mul';
-    } else if (ctx.SLASH()) {
-      op = '__div';
-    } else if (ctx.PER()) {
-      op = '__mod';
-    } else if (ctx.SS()) {
-      op = '__idiv';
-    } else {
-      throw new NotYetImplemented('will never happen', ctx, 'N999');
-    }
-    return this.exec_operator(left, right, op, ctx);
-  };
-
-  visitExp_rel = (ctx: Exp_relContext): Value => {
-    this.consumeCredit(ctx);
-    const left = firstValue(ctx.exp(0).accept(this));
-    const right = firstValue(ctx.exp(1).accept(this));
-    if (ctx.EE()) {
-      return this.compare_ee(left, right, ctx);
-    }
-    if (ctx.SQEQ()) {
-      return BooleanValue.from(!this.compare_ee(left, right, ctx).boolean);
-    }
-    if (ctx.LT()) {
-      return this.compare_op(left, right, '__lt', ctx);
-    }
-    if (ctx.LE()) {
-      return this.compare_op(left, right, '__le', ctx);
-    }
-    if (ctx.GT()) {
-      return this.compare_op(left, right, '__lt', ctx, /* reversed: */ true);
-    }
-    if (ctx.GE()) {
-      return this.compare_op(left, right, '__le', ctx, /* reversed: */ true);
-    }
-    throw new NotYetImplemented('compare for non numbers', ctx, 'N999');
-  };
-
-  private compare_op(
-    left: Value,
-    right: Value,
-    op: string,
-    ctx: ExpContext,
-    reversed = false
-  ): BooleanValue {
-    const result = this.exec_operator(left, right, op, ctx, reversed);
-    if (result instanceof BooleanValue) {
-      return result;
-    }
-    return BooleanValue.from(isTrue(result));
-  }
-
-  private compare_ee(left: Value, right: Value, ctx: ExpContext): BooleanValue {
-    const op = '__eq';
-    const metatableOperation =
-      getMetatableOperatorFn(left, op) || getMetatableOperatorFn(right, op);
-
-    if (left.constructor != right.constructor) {
-      return BooleanValue.false();
-    } else if (left instanceof NilValue && right instanceof NilValue) {
-      return BooleanValue.true();
-    } else if (left == right) {
-      return BooleanValue.true();
-    } else if (!metatableOperation) {
-      return BooleanValue.false();
-    }
-    return BooleanValue.from(
-      isTrue(this.exec_operator(left, right, '__eq', ctx))
-    );
-  }
-
   visitStat_table_construnctor = (
     ctx: Stat_table_construnctorContext
   ): Value => {
@@ -579,23 +475,109 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     return ctx.tableconstructor().accept(this);
   };
 
-  visitExp_unary = (ctx: Exp_unaryContext): Value => {
+  private equalityCompare(left: Value, right: Value, ctx: ExpContext): boolean {
+    const metatableOperator =
+      getMetatableOperatorFn(left, '__eq') ||
+      getMetatableOperatorFn(right, '__eq');
+
+    if (left.constructor != right.constructor) {
+      return false;
+    } else if (left instanceof NilValue && right instanceof NilValue) {
+      return true;
+    } else if (left == right) {
+      return true;
+    } else if (!metatableOperator) {
+      return false;
+    }
+    return isTrue(this.exec_operator(left, right, '__eq', ctx));
+  }
+
+  visitOp_binary = (ctx: Op_binaryContext): Value => {
+    this.consumeCredit(ctx);
+    const left = firstValue(ctx.exp(0).accept(this));
+    const right = firstValue(ctx.exp(1).accept(this));
+
+    let op: string;
+    let reversed = false;
+    let castToBool = false;
+
+    if (ctx.EE()) {
+      return BooleanValue.from(this.equalityCompare(left, right, ctx));
+    } else if (ctx.SQEQ()) {
+      return BooleanValue.from(!this.equalityCompare(left, right, ctx));
+    } else if (ctx.CARET()) {
+      op = '__pow';
+    } else if (ctx.STAR()) {
+      op = '__mul';
+    } else if (ctx.SLASH()) {
+      op = '__div';
+    } else if (ctx.PER()) {
+      op = '__mod';
+    } else if (ctx.SS()) {
+      op = '__idiv';
+    } else if (ctx.PLUS()) {
+      op = '__add';
+    } else if (ctx.MINUS()) {
+      op = '__sub';
+    } else if (ctx.DD()) {
+      op = '__concat';
+    } else if (ctx.LT()) {
+      castToBool = true;
+      op = '__lt';
+    } else if (ctx.LE()) {
+      castToBool = true;
+      op = '__le';
+    } else if (ctx.GT()) {
+      castToBool = true;
+      reversed = true;
+      op = '__lt';
+    } else if (ctx.GE()) {
+      castToBool = true;
+      reversed = true;
+      op = '__le';
+    } else if (ctx.AMP()) {
+      op = '__band';
+    } else if (ctx.PIPE()) {
+      op = '__bor';
+    } else if (ctx.SQUIG()) {
+      op = '__bxor';
+    } else if (ctx.GG()) {
+      op = '__shr';
+    } else if (ctx.LL()) {
+      op = '__shl';
+    } else {
+      throw new NotYetImplemented('will never happen', ctx, 'N999');
+    }
+
+    const result = this.exec_operator(left, right, op, ctx, reversed);
+    if (castToBool && !(result instanceof BooleanValue)) {
+      return BooleanValue.from(isTrue(result));
+    }
+    return result;
+  };
+
+  visitOp_unary = (ctx: Op_unaryContext): Value => {
     this.consumeCredit(ctx);
     const exp = firstValue(ctx.exp().accept(this));
-    if (ctx.MINUS()) {
-      return this.exec_operator(exp, exp, '__unm', ctx);
-    } else if (ctx.NOT()) {
+
+    let op: string;
+    let fallbackFn: (() => Value) | undefined = undefined;
+
+    if (ctx.NOT()) {
       return BooleanValue.from(!isTrue(exp));
     } else if (ctx.POUND()) {
-      const fallbackFn =
-        exp instanceof TableValue
-          ? () => NumberValue.from((exp as TableValue).size())
-          : undefined;
-      return this.exec_operator(exp, exp, '__len', ctx, undefined, fallbackFn);
+      if (exp instanceof TableValue) {
+        fallbackFn = () => NumberValue.from((exp as TableValue).size());
+      }
+      op = '__len';
+    } else if (ctx.MINUS()) {
+      op = '__unm';
     } else if (ctx.SQUIG()) {
-      return this.exec_operator(exp, exp, '__bnot', ctx);
+      op = '__bnot';
+    } else {
+      throw new NotYetImplemented('will never happen', ctx, 'N999');
     }
-    throw new NotYetImplemented('will never happen', ctx, 'N999');
+    return this.exec_operator(exp, exp, op, ctx, false, fallbackFn);
   };
 
   visitExp_or = (ctx: Exp_orContext): Value => {
@@ -620,24 +602,9 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     return ctx.prefixexp().accept(this);
   };
 
-  visitExp_exponent = (ctx: Exp_exponentContext): Value => {
-    this.consumeCredit(ctx);
-    const left = firstValue(ctx.exp(0).accept(this));
-    const right = firstValue(ctx.exp(1).accept(this));
-    return this.exec_operator(left, right, '__pow', ctx);
-  };
-
   visitExp_number = (ctx: Exp_numberContext): Value => {
     this.consumeCredit(ctx);
     return ctx.number_().accept(this);
-  };
-
-  visitExp_concat = (ctx: Exp_concatContext): Value => {
-    this.consumeCredit(ctx);
-    const left = firstValue(ctx.exp(0).accept(this));
-    const right = firstValue(ctx.exp(1).accept(this));
-
-    return this.exec_operator(left, right, '__concat', ctx);
   };
 
   visitExp_vararg = (ctx: Exp_varargContext): Value => {
@@ -652,15 +619,6 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       }
       return new InternalListValue(list);
     }
-  };
-
-  visitExp_arithmetic_low = (ctx: Exp_arithmetic_lowContext): Value => {
-    this.consumeCredit(ctx);
-    const left = firstValue(ctx.exp(0).accept(this));
-    const right = firstValue(ctx.exp(1).accept(this));
-
-    const op = ctx.PLUS() ? '__add' : '__sub';
-    return this.exec_operator(left, right, op, ctx);
   };
 
   private exec_operator = (
@@ -678,22 +636,22 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       );
     }
   ) => {
-    const tableMetatableOperation =
+    const tableMetatableOperator =
       left instanceof TableValue
         ? getMetatableOperatorFn(left, op)
         : right instanceof TableValue
           ? getMetatableOperatorFn(right, op)
           : undefined;
-    const metatableOperation =
-      tableMetatableOperation ||
+    const metatableOperator =
+      tableMetatableOperator ||
       getMetatableOperatorFn(left, op) ||
       getMetatableOperatorFn(right, op);
 
-    if (!metatableOperation) {
+    if (!metatableOperator) {
       return fallbackFn();
     }
     const result = this.exec_function(
-      metatableOperation,
+      metatableOperator,
       new InternalListValue(reversed ? [right, left] : [left, right]),
       ctx
     );
