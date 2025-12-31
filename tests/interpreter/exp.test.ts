@@ -2,8 +2,10 @@ import LuaInterpreter from '@src/interpreter/LuaInterpreter';
 
 import { NumberValue } from '@src/interpreter/types';
 import { make_parser } from '@src/interpreter/utils';
+import { initializeMethaMethodsForBasicTypes } from '@src/interpreter/metamethods';
 
 const interpreter = new LuaInterpreter();
+initializeMethaMethodsForBasicTypes();
 
 function parse(luaCode: string): NumberValue {
   const parser = make_parser(luaCode);

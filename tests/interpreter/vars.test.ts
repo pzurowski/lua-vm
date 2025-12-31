@@ -12,6 +12,7 @@ import {
   assert_return_nothing,
   number_value,
 } from '@tests/interpreter/test_utils';
+import { initializeMethaMethodsForBasicTypes } from '@src/interpreter/metamethods';
 
 test('c=a+b', () => {
   const lua = `
@@ -21,6 +22,7 @@ test('c=a+b', () => {
     return c
     `;
   const interpreter = new LuaInterpreter();
+  initializeMethaMethodsForBasicTypes();
   const result = executeWithInterpreter(lua, interpreter);
   assert_return_number(result, 42);
 });
@@ -36,6 +38,7 @@ test('while loop', () => {
     return b
     `;
   const interpreter = new LuaInterpreter();
+  initializeMethaMethodsForBasicTypes();
   const result = executeWithInterpreter(lua, interpreter);
   assert_return_number(result, 32);
 });
@@ -49,6 +52,7 @@ test('define function', () => {
   return
   `;
   const interpreter = new LuaInterpreter();
+  initializeMethaMethodsForBasicTypes();
   const result = executeWithInterpreter(lua, interpreter);
   assert_return_nothing(result);
   const a = interpreter.getGlobalVar(StringValue.from('a'));
@@ -63,6 +67,7 @@ test('visibility scopes', () => {
   return a
   `;
   const interpreter = new LuaInterpreter();
+  initializeMethaMethodsForBasicTypes();
   const result = executeWithInterpreter(lua, interpreter);
   assert_return_number(result, 20);
   const a = interpreter.getGlobalVar(StringValue.from('a'));
@@ -83,6 +88,7 @@ test('visibility scopes in function', () => {
   return a, b
   `;
   const interpreter = new LuaInterpreter();
+  initializeMethaMethodsForBasicTypes();
   const result = executeWithInterpreter(lua, interpreter);
   expect(result).toBeInstanceOf(InternalListValue);
   expect((result as InternalListValue).size()).toBe(2);
@@ -104,6 +110,7 @@ test('function return', () => {
   return ff(), a, b
   `;
   const interpreter = new LuaInterpreter();
+  initializeMethaMethodsForBasicTypes();
   const result = executeWithInterpreter(lua, interpreter);
   expect(result).toBeInstanceOf(InternalListValue);
   expect((result as InternalListValue).size()).toBe(3);
@@ -122,6 +129,7 @@ test('function add', () => {
   return a, c
   `;
   const interpreter = new LuaInterpreter();
+  initializeMethaMethodsForBasicTypes();
   const result = executeWithInterpreter(lua, interpreter);
   expect(result).toBeInstanceOf(InternalListValue);
   expect((result as InternalListValue).size()).toBe(2);
@@ -139,6 +147,7 @@ test('function call with extra arg', () => {
   return a, c
   `;
   const interpreter = new LuaInterpreter();
+  initializeMethaMethodsForBasicTypes();
   const result = executeWithInterpreter(lua, interpreter);
   expect(result).toBeInstanceOf(InternalListValue);
   expect((result as InternalListValue).size()).toBe(2);
@@ -159,6 +168,7 @@ test('function call with not enough args', () => {
   return a, b, c
   `;
   const interpreter = new LuaInterpreter();
+  initializeMethaMethodsForBasicTypes();
   const result = executeWithInterpreter(lua, interpreter);
   expect(result).toBeInstanceOf(InternalListValue);
   expect((result as InternalListValue).size()).toBe(3);

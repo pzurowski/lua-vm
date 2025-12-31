@@ -53,7 +53,7 @@ class NumberValue extends Value {
   }
 
   getMetatable(): TableValue | NilValue {
-    return new NilValue();
+    return numberMetatable;
   }
 
   setMetatable(value: TableValue | NilValue): void {
@@ -88,7 +88,7 @@ class StringValue extends Value {
   }
 
   getMetatable(): TableValue | NilValue {
-    return new NilValue();
+    return stringMetatable;
   }
 
   setMetatable(value: TableValue | NilValue): void {
@@ -195,7 +195,7 @@ class BooleanValue extends Value {
   }
 
   getMetatable(): TableValue | NilValue {
-    return new NilValue();
+    return booleanMetatable;
   }
 
   setMetatable(value: TableValue | NilValue): void {
@@ -397,6 +397,10 @@ class InterpreterValue extends Value {
     throw new Error('Not implemented');
   }
 }
+
+export const numberMetatable = new TableValue();
+export const stringMetatable = new TableValue();
+export const booleanMetatable = new TableValue();
 
 export {
   Value,
