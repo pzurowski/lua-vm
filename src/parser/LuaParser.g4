@@ -89,15 +89,15 @@ exp
     | functiondef # exp_function_def
     | prefixexp # stat_prefix_exp
     | tableconstructor #stat_table_construnctor
-    | <assoc = right> exp ('^') exp # exp_exponent
-    | ('not' | '#' | '-' | '~') exp # exp_unary
-    | exp ('*' | '/' | '%' | '//') exp # exp_arithmetic_high
-    | exp ('+' | '-') exp # exp_arithmetic_low
-    | <assoc = right> exp ('..') exp # exp_concat
-    | exp ('<' | '>' | '<=' | '>=' | '~=' | '==') exp # exp_rel
+    | <assoc = right> exp ('^') exp # op_binary
+    | ('not' | '#' | '-' | '~') exp # op_unary
+    | exp ('*' | '/' | '%' | '//') exp # op_binary
+    | exp ('+' | '-') exp # op_binary
+    | <assoc = right> exp ('..') exp # op_binary
+    | exp ('<' | '>' | '<=' | '>=' | '~=' | '==') exp # op_binary
     | exp ('and') exp # exp_and
     | exp ('or') exp # exp_or
-    | exp ('&' | '|' | '~' | '<<' | '>>') exp # exp_bits
+    | exp ('&' | '|' | '~' | '<<' | '>>') exp # op_binary
     ;
 
 // var ::=  Name | prefixexp '[' exp ']' | prefixexp '.' Name 

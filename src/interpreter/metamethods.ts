@@ -25,7 +25,7 @@ const numberOperators = {
   __bxor: (l: number, r: number) => l ^ r,
   __bnot: (l: number, _: number) => ~l,
   __shr: (l: number, r: number) => l >> r,
-  __shl: (l: number, r: number) => l << r
+  __shl: (l: number, r: number) => l << r,
 };
 const numberRelationalOperators = {
   __le: (l: number, r: number) => l <= r,
@@ -86,7 +86,7 @@ export function initializeMethaMethodsForBasicTypes() {
         StringValue.from
       )
     );
-    ['__index', '__newindex', '__call'].forEach((op)=>{
+    ['__index', '__newindex', '__call'].forEach(op => {
       metatable.set(
         StringValue.from(op),
         ExtFunction.of(() => {

@@ -1029,7 +1029,7 @@ export default class LuaParser extends Parser {
 			case 29:
 			case 32:
 				{
-				localctx = new Exp_unaryContext(this, localctx);
+				localctx = new Op_unaryContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
 				this.state = 221;
@@ -1064,7 +1064,7 @@ export default class LuaParser extends Parser {
 					switch ( this._interp.adaptivePredict(this._input, 17, this._ctx) ) {
 					case 1:
 						{
-						localctx = new Exp_exponentContext(this, new ExpContext(this, _parentctx, _parentState));
+						localctx = new Op_binaryContext(this, new ExpContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LuaParser.RULE_exp);
 						this.state = 225;
 						if (!(this.precpred(this._ctx, 9))) {
@@ -1080,7 +1080,7 @@ export default class LuaParser extends Parser {
 						break;
 					case 2:
 						{
-						localctx = new Exp_arithmetic_highContext(this, new ExpContext(this, _parentctx, _parentState));
+						localctx = new Op_binaryContext(this, new ExpContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LuaParser.RULE_exp);
 						this.state = 228;
 						if (!(this.precpred(this._ctx, 7))) {
@@ -1101,7 +1101,7 @@ export default class LuaParser extends Parser {
 						break;
 					case 3:
 						{
-						localctx = new Exp_arithmetic_lowContext(this, new ExpContext(this, _parentctx, _parentState));
+						localctx = new Op_binaryContext(this, new ExpContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LuaParser.RULE_exp);
 						this.state = 231;
 						if (!(this.precpred(this._ctx, 6))) {
@@ -1122,7 +1122,7 @@ export default class LuaParser extends Parser {
 						break;
 					case 4:
 						{
-						localctx = new Exp_concatContext(this, new ExpContext(this, _parentctx, _parentState));
+						localctx = new Op_binaryContext(this, new ExpContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LuaParser.RULE_exp);
 						this.state = 234;
 						if (!(this.precpred(this._ctx, 5))) {
@@ -1138,7 +1138,7 @@ export default class LuaParser extends Parser {
 						break;
 					case 5:
 						{
-						localctx = new Exp_relContext(this, new ExpContext(this, _parentctx, _parentState));
+						localctx = new Op_binaryContext(this, new ExpContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LuaParser.RULE_exp);
 						this.state = 237;
 						if (!(this.precpred(this._ctx, 4))) {
@@ -1191,7 +1191,7 @@ export default class LuaParser extends Parser {
 						break;
 					case 8:
 						{
-						localctx = new Exp_bitsContext(this, new ExpContext(this, _parentctx, _parentState));
+						localctx = new Op_binaryContext(this, new ExpContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LuaParser.RULE_exp);
 						this.state = 246;
 						if (!(this.precpred(this._ctx, 1))) {
@@ -3544,51 +3544,6 @@ export class Exp_trueContext extends ExpContext {
 		}
 	}
 }
-export class Exp_bitsContext extends ExpContext {
-	constructor(parser: LuaParser, ctx: ExpContext) {
-		super(parser, ctx.parentCtx, ctx.invokingState);
-		super.copyFrom(ctx);
-	}
-	public exp_list(): ExpContext[] {
-		return this.getTypedRuleContexts(ExpContext) as ExpContext[];
-	}
-	public exp(i: number): ExpContext {
-		return this.getTypedRuleContext(ExpContext, i) as ExpContext;
-	}
-	public AMP(): TerminalNode {
-		return this.getToken(LuaParser.AMP, 0);
-	}
-	public PIPE(): TerminalNode {
-		return this.getToken(LuaParser.PIPE, 0);
-	}
-	public SQUIG(): TerminalNode {
-		return this.getToken(LuaParser.SQUIG, 0);
-	}
-	public LL(): TerminalNode {
-		return this.getToken(LuaParser.LL, 0);
-	}
-	public GG(): TerminalNode {
-		return this.getToken(LuaParser.GG, 0);
-	}
-	public enterRule(listener: LuaParserListener): void {
-	    if(listener.enterExp_bits) {
-	 		listener.enterExp_bits(this);
-		}
-	}
-	public exitRule(listener: LuaParserListener): void {
-	    if(listener.exitExp_bits) {
-	 		listener.exitExp_bits(this);
-		}
-	}
-	// @Override
-	public accept<Result>(visitor: LuaParserVisitor<Result>): Result {
-		if (visitor.visitExp_bits) {
-			return visitor.visitExp_bits(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
 export class Exp_andContext extends ExpContext {
 	constructor(parser: LuaParser, ctx: ExpContext) {
 		super(parser, ctx.parentCtx, ctx.invokingState);
@@ -3649,96 +3604,6 @@ export class Exp_stringContext extends ExpContext {
 		}
 	}
 }
-export class Exp_arithmetic_highContext extends ExpContext {
-	constructor(parser: LuaParser, ctx: ExpContext) {
-		super(parser, ctx.parentCtx, ctx.invokingState);
-		super.copyFrom(ctx);
-	}
-	public exp_list(): ExpContext[] {
-		return this.getTypedRuleContexts(ExpContext) as ExpContext[];
-	}
-	public exp(i: number): ExpContext {
-		return this.getTypedRuleContext(ExpContext, i) as ExpContext;
-	}
-	public STAR(): TerminalNode {
-		return this.getToken(LuaParser.STAR, 0);
-	}
-	public SLASH(): TerminalNode {
-		return this.getToken(LuaParser.SLASH, 0);
-	}
-	public PER(): TerminalNode {
-		return this.getToken(LuaParser.PER, 0);
-	}
-	public SS(): TerminalNode {
-		return this.getToken(LuaParser.SS, 0);
-	}
-	public enterRule(listener: LuaParserListener): void {
-	    if(listener.enterExp_arithmetic_high) {
-	 		listener.enterExp_arithmetic_high(this);
-		}
-	}
-	public exitRule(listener: LuaParserListener): void {
-	    if(listener.exitExp_arithmetic_high) {
-	 		listener.exitExp_arithmetic_high(this);
-		}
-	}
-	// @Override
-	public accept<Result>(visitor: LuaParserVisitor<Result>): Result {
-		if (visitor.visitExp_arithmetic_high) {
-			return visitor.visitExp_arithmetic_high(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
-export class Exp_relContext extends ExpContext {
-	constructor(parser: LuaParser, ctx: ExpContext) {
-		super(parser, ctx.parentCtx, ctx.invokingState);
-		super.copyFrom(ctx);
-	}
-	public exp_list(): ExpContext[] {
-		return this.getTypedRuleContexts(ExpContext) as ExpContext[];
-	}
-	public exp(i: number): ExpContext {
-		return this.getTypedRuleContext(ExpContext, i) as ExpContext;
-	}
-	public LT(): TerminalNode {
-		return this.getToken(LuaParser.LT, 0);
-	}
-	public GT(): TerminalNode {
-		return this.getToken(LuaParser.GT, 0);
-	}
-	public LE(): TerminalNode {
-		return this.getToken(LuaParser.LE, 0);
-	}
-	public GE(): TerminalNode {
-		return this.getToken(LuaParser.GE, 0);
-	}
-	public SQEQ(): TerminalNode {
-		return this.getToken(LuaParser.SQEQ, 0);
-	}
-	public EE(): TerminalNode {
-		return this.getToken(LuaParser.EE, 0);
-	}
-	public enterRule(listener: LuaParserListener): void {
-	    if(listener.enterExp_rel) {
-	 		listener.enterExp_rel(this);
-		}
-	}
-	public exitRule(listener: LuaParserListener): void {
-	    if(listener.exitExp_rel) {
-	 		listener.exitExp_rel(this);
-		}
-	}
-	// @Override
-	public accept<Result>(visitor: LuaParserVisitor<Result>): Result {
-		if (visitor.visitExp_rel) {
-			return visitor.visitExp_rel(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
 export class Stat_table_construnctorContext extends ExpContext {
 	constructor(parser: LuaParser, ctx: ExpContext) {
 		super(parser, ctx.parentCtx, ctx.invokingState);
@@ -3766,7 +3631,94 @@ export class Stat_table_construnctorContext extends ExpContext {
 		}
 	}
 }
-export class Exp_unaryContext extends ExpContext {
+export class Op_binaryContext extends ExpContext {
+	constructor(parser: LuaParser, ctx: ExpContext) {
+		super(parser, ctx.parentCtx, ctx.invokingState);
+		super.copyFrom(ctx);
+	}
+	public exp_list(): ExpContext[] {
+		return this.getTypedRuleContexts(ExpContext) as ExpContext[];
+	}
+	public exp(i: number): ExpContext {
+		return this.getTypedRuleContext(ExpContext, i) as ExpContext;
+	}
+	public CARET(): TerminalNode {
+		return this.getToken(LuaParser.CARET, 0);
+	}
+	public STAR(): TerminalNode {
+		return this.getToken(LuaParser.STAR, 0);
+	}
+	public SLASH(): TerminalNode {
+		return this.getToken(LuaParser.SLASH, 0);
+	}
+	public PER(): TerminalNode {
+		return this.getToken(LuaParser.PER, 0);
+	}
+	public SS(): TerminalNode {
+		return this.getToken(LuaParser.SS, 0);
+	}
+	public PLUS(): TerminalNode {
+		return this.getToken(LuaParser.PLUS, 0);
+	}
+	public MINUS(): TerminalNode {
+		return this.getToken(LuaParser.MINUS, 0);
+	}
+	public DD(): TerminalNode {
+		return this.getToken(LuaParser.DD, 0);
+	}
+	public LT(): TerminalNode {
+		return this.getToken(LuaParser.LT, 0);
+	}
+	public GT(): TerminalNode {
+		return this.getToken(LuaParser.GT, 0);
+	}
+	public LE(): TerminalNode {
+		return this.getToken(LuaParser.LE, 0);
+	}
+	public GE(): TerminalNode {
+		return this.getToken(LuaParser.GE, 0);
+	}
+	public SQEQ(): TerminalNode {
+		return this.getToken(LuaParser.SQEQ, 0);
+	}
+	public EE(): TerminalNode {
+		return this.getToken(LuaParser.EE, 0);
+	}
+	public AMP(): TerminalNode {
+		return this.getToken(LuaParser.AMP, 0);
+	}
+	public PIPE(): TerminalNode {
+		return this.getToken(LuaParser.PIPE, 0);
+	}
+	public SQUIG(): TerminalNode {
+		return this.getToken(LuaParser.SQUIG, 0);
+	}
+	public LL(): TerminalNode {
+		return this.getToken(LuaParser.LL, 0);
+	}
+	public GG(): TerminalNode {
+		return this.getToken(LuaParser.GG, 0);
+	}
+	public enterRule(listener: LuaParserListener): void {
+	    if(listener.enterOp_binary) {
+	 		listener.enterOp_binary(this);
+		}
+	}
+	public exitRule(listener: LuaParserListener): void {
+	    if(listener.exitOp_binary) {
+	 		listener.exitOp_binary(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: LuaParserVisitor<Result>): Result {
+		if (visitor.visitOp_binary) {
+			return visitor.visitOp_binary(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class Op_unaryContext extends ExpContext {
 	constructor(parser: LuaParser, ctx: ExpContext) {
 		super(parser, ctx.parentCtx, ctx.invokingState);
 		super.copyFrom(ctx);
@@ -3787,19 +3739,19 @@ export class Exp_unaryContext extends ExpContext {
 		return this.getToken(LuaParser.SQUIG, 0);
 	}
 	public enterRule(listener: LuaParserListener): void {
-	    if(listener.enterExp_unary) {
-	 		listener.enterExp_unary(this);
+	    if(listener.enterOp_unary) {
+	 		listener.enterOp_unary(this);
 		}
 	}
 	public exitRule(listener: LuaParserListener): void {
-	    if(listener.exitExp_unary) {
-	 		listener.exitExp_unary(this);
+	    if(listener.exitOp_unary) {
+	 		listener.exitOp_unary(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: LuaParserVisitor<Result>): Result {
-		if (visitor.visitExp_unary) {
-			return visitor.visitExp_unary(this);
+		if (visitor.visitOp_unary) {
+			return visitor.visitOp_unary(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -3892,39 +3844,6 @@ export class Stat_prefix_expContext extends ExpContext {
 		}
 	}
 }
-export class Exp_exponentContext extends ExpContext {
-	constructor(parser: LuaParser, ctx: ExpContext) {
-		super(parser, ctx.parentCtx, ctx.invokingState);
-		super.copyFrom(ctx);
-	}
-	public exp_list(): ExpContext[] {
-		return this.getTypedRuleContexts(ExpContext) as ExpContext[];
-	}
-	public exp(i: number): ExpContext {
-		return this.getTypedRuleContext(ExpContext, i) as ExpContext;
-	}
-	public CARET(): TerminalNode {
-		return this.getToken(LuaParser.CARET, 0);
-	}
-	public enterRule(listener: LuaParserListener): void {
-	    if(listener.enterExp_exponent) {
-	 		listener.enterExp_exponent(this);
-		}
-	}
-	public exitRule(listener: LuaParserListener): void {
-	    if(listener.exitExp_exponent) {
-	 		listener.exitExp_exponent(this);
-		}
-	}
-	// @Override
-	public accept<Result>(visitor: LuaParserVisitor<Result>): Result {
-		if (visitor.visitExp_exponent) {
-			return visitor.visitExp_exponent(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
 export class Exp_numberContext extends ExpContext {
 	constructor(parser: LuaParser, ctx: ExpContext) {
 		super(parser, ctx.parentCtx, ctx.invokingState);
@@ -3952,39 +3871,6 @@ export class Exp_numberContext extends ExpContext {
 		}
 	}
 }
-export class Exp_concatContext extends ExpContext {
-	constructor(parser: LuaParser, ctx: ExpContext) {
-		super(parser, ctx.parentCtx, ctx.invokingState);
-		super.copyFrom(ctx);
-	}
-	public exp_list(): ExpContext[] {
-		return this.getTypedRuleContexts(ExpContext) as ExpContext[];
-	}
-	public exp(i: number): ExpContext {
-		return this.getTypedRuleContext(ExpContext, i) as ExpContext;
-	}
-	public DD(): TerminalNode {
-		return this.getToken(LuaParser.DD, 0);
-	}
-	public enterRule(listener: LuaParserListener): void {
-	    if(listener.enterExp_concat) {
-	 		listener.enterExp_concat(this);
-		}
-	}
-	public exitRule(listener: LuaParserListener): void {
-	    if(listener.exitExp_concat) {
-	 		listener.exitExp_concat(this);
-		}
-	}
-	// @Override
-	public accept<Result>(visitor: LuaParserVisitor<Result>): Result {
-		if (visitor.visitExp_concat) {
-			return visitor.visitExp_concat(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
 export class Exp_varargContext extends ExpContext {
 	constructor(parser: LuaParser, ctx: ExpContext) {
 		super(parser, ctx.parentCtx, ctx.invokingState);
@@ -4007,42 +3893,6 @@ export class Exp_varargContext extends ExpContext {
 	public accept<Result>(visitor: LuaParserVisitor<Result>): Result {
 		if (visitor.visitExp_vararg) {
 			return visitor.visitExp_vararg(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
-export class Exp_arithmetic_lowContext extends ExpContext {
-	constructor(parser: LuaParser, ctx: ExpContext) {
-		super(parser, ctx.parentCtx, ctx.invokingState);
-		super.copyFrom(ctx);
-	}
-	public exp_list(): ExpContext[] {
-		return this.getTypedRuleContexts(ExpContext) as ExpContext[];
-	}
-	public exp(i: number): ExpContext {
-		return this.getTypedRuleContext(ExpContext, i) as ExpContext;
-	}
-	public PLUS(): TerminalNode {
-		return this.getToken(LuaParser.PLUS, 0);
-	}
-	public MINUS(): TerminalNode {
-		return this.getToken(LuaParser.MINUS, 0);
-	}
-	public enterRule(listener: LuaParserListener): void {
-	    if(listener.enterExp_arithmetic_low) {
-	 		listener.enterExp_arithmetic_low(this);
-		}
-	}
-	public exitRule(listener: LuaParserListener): void {
-	    if(listener.exitExp_arithmetic_low) {
-	 		listener.exitExp_arithmetic_low(this);
-		}
-	}
-	// @Override
-	public accept<Result>(visitor: LuaParserVisitor<Result>): Result {
-		if (visitor.visitExp_arithmetic_low) {
-			return visitor.visitExp_arithmetic_low(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

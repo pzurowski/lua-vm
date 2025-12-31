@@ -30,21 +30,16 @@ import { VarlistContext } from "./LuaParser.js";
 import { NamelistContext } from "./LuaParser.js";
 import { ExplistContext } from "./LuaParser.js";
 import { Exp_trueContext } from "./LuaParser.js";
-import { Exp_bitsContext } from "./LuaParser.js";
 import { Exp_andContext } from "./LuaParser.js";
 import { Exp_stringContext } from "./LuaParser.js";
-import { Exp_arithmetic_highContext } from "./LuaParser.js";
-import { Exp_relContext } from "./LuaParser.js";
 import { Stat_table_construnctorContext } from "./LuaParser.js";
-import { Exp_unaryContext } from "./LuaParser.js";
+import { Op_binaryContext } from "./LuaParser.js";
+import { Op_unaryContext } from "./LuaParser.js";
 import { Exp_orContext } from "./LuaParser.js";
 import { Exp_falseContext } from "./LuaParser.js";
 import { Stat_prefix_expContext } from "./LuaParser.js";
-import { Exp_exponentContext } from "./LuaParser.js";
 import { Exp_numberContext } from "./LuaParser.js";
-import { Exp_concatContext } from "./LuaParser.js";
 import { Exp_varargContext } from "./LuaParser.js";
-import { Exp_arithmetic_lowContext } from "./LuaParser.js";
 import { Exp_function_defContext } from "./LuaParser.js";
 import { Exp_nilContext } from "./LuaParser.js";
 import { Var_nameContext } from "./LuaParser.js";
@@ -389,18 +384,6 @@ export default class LuaParserListener extends ParseTreeListener {
 	 */
 	exitExp_true?: (ctx: Exp_trueContext) => void;
 	/**
-	 * Enter a parse tree produced by the `exp_bits`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	enterExp_bits?: (ctx: Exp_bitsContext) => void;
-	/**
-	 * Exit a parse tree produced by the `exp_bits`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	exitExp_bits?: (ctx: Exp_bitsContext) => void;
-	/**
 	 * Enter a parse tree produced by the `exp_and`
 	 * labeled alternative in `LuaParser.exp`.
 	 * @param ctx the parse tree
@@ -425,30 +408,6 @@ export default class LuaParserListener extends ParseTreeListener {
 	 */
 	exitExp_string?: (ctx: Exp_stringContext) => void;
 	/**
-	 * Enter a parse tree produced by the `exp_arithmetic_high`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	enterExp_arithmetic_high?: (ctx: Exp_arithmetic_highContext) => void;
-	/**
-	 * Exit a parse tree produced by the `exp_arithmetic_high`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	exitExp_arithmetic_high?: (ctx: Exp_arithmetic_highContext) => void;
-	/**
-	 * Enter a parse tree produced by the `exp_rel`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	enterExp_rel?: (ctx: Exp_relContext) => void;
-	/**
-	 * Exit a parse tree produced by the `exp_rel`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	exitExp_rel?: (ctx: Exp_relContext) => void;
-	/**
 	 * Enter a parse tree produced by the `stat_table_construnctor`
 	 * labeled alternative in `LuaParser.exp`.
 	 * @param ctx the parse tree
@@ -461,17 +420,29 @@ export default class LuaParserListener extends ParseTreeListener {
 	 */
 	exitStat_table_construnctor?: (ctx: Stat_table_construnctorContext) => void;
 	/**
-	 * Enter a parse tree produced by the `exp_unary`
+	 * Enter a parse tree produced by the `op_binary`
 	 * labeled alternative in `LuaParser.exp`.
 	 * @param ctx the parse tree
 	 */
-	enterExp_unary?: (ctx: Exp_unaryContext) => void;
+	enterOp_binary?: (ctx: Op_binaryContext) => void;
 	/**
-	 * Exit a parse tree produced by the `exp_unary`
+	 * Exit a parse tree produced by the `op_binary`
 	 * labeled alternative in `LuaParser.exp`.
 	 * @param ctx the parse tree
 	 */
-	exitExp_unary?: (ctx: Exp_unaryContext) => void;
+	exitOp_binary?: (ctx: Op_binaryContext) => void;
+	/**
+	 * Enter a parse tree produced by the `op_unary`
+	 * labeled alternative in `LuaParser.exp`.
+	 * @param ctx the parse tree
+	 */
+	enterOp_unary?: (ctx: Op_unaryContext) => void;
+	/**
+	 * Exit a parse tree produced by the `op_unary`
+	 * labeled alternative in `LuaParser.exp`.
+	 * @param ctx the parse tree
+	 */
+	exitOp_unary?: (ctx: Op_unaryContext) => void;
 	/**
 	 * Enter a parse tree produced by the `exp_or`
 	 * labeled alternative in `LuaParser.exp`.
@@ -509,18 +480,6 @@ export default class LuaParserListener extends ParseTreeListener {
 	 */
 	exitStat_prefix_exp?: (ctx: Stat_prefix_expContext) => void;
 	/**
-	 * Enter a parse tree produced by the `exp_exponent`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	enterExp_exponent?: (ctx: Exp_exponentContext) => void;
-	/**
-	 * Exit a parse tree produced by the `exp_exponent`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	exitExp_exponent?: (ctx: Exp_exponentContext) => void;
-	/**
 	 * Enter a parse tree produced by the `exp_number`
 	 * labeled alternative in `LuaParser.exp`.
 	 * @param ctx the parse tree
@@ -533,18 +492,6 @@ export default class LuaParserListener extends ParseTreeListener {
 	 */
 	exitExp_number?: (ctx: Exp_numberContext) => void;
 	/**
-	 * Enter a parse tree produced by the `exp_concat`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	enterExp_concat?: (ctx: Exp_concatContext) => void;
-	/**
-	 * Exit a parse tree produced by the `exp_concat`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	exitExp_concat?: (ctx: Exp_concatContext) => void;
-	/**
 	 * Enter a parse tree produced by the `exp_vararg`
 	 * labeled alternative in `LuaParser.exp`.
 	 * @param ctx the parse tree
@@ -556,18 +503,6 @@ export default class LuaParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitExp_vararg?: (ctx: Exp_varargContext) => void;
-	/**
-	 * Enter a parse tree produced by the `exp_arithmetic_low`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	enterExp_arithmetic_low?: (ctx: Exp_arithmetic_lowContext) => void;
-	/**
-	 * Exit a parse tree produced by the `exp_arithmetic_low`
-	 * labeled alternative in `LuaParser.exp`.
-	 * @param ctx the parse tree
-	 */
-	exitExp_arithmetic_low?: (ctx: Exp_arithmetic_lowContext) => void;
 	/**
 	 * Enter a parse tree produced by the `exp_function_def`
 	 * labeled alternative in `LuaParser.exp`.
