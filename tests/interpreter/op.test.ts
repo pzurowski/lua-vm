@@ -157,7 +157,7 @@ test('only strings and numbers are supported', () => {
   }
   expect(exception).toBeInstanceOf(RuntimeError);
   expect((exception as RuntimeError).message).toBe(
-    "Runtime error: (line: 4, col: 8): Can't compare type BooleanValue"
+    'Runtime error: (line: 4, col: 8): Expected NumberValue, but got BooleanValue'
   );
 });
 
@@ -175,7 +175,7 @@ test('number and string raise error', () => {
   }
   expect(exception).toBeInstanceOf(RuntimeError);
   expect((exception as RuntimeError).message).toBe(
-    'Runtime error: (line: 4, col: 8): Right expression not a Number - StringValue'
+    'Runtime error: (line: 4, col: 8): Expected NumberValue, but got StringValue'
   );
 });
 
@@ -193,7 +193,7 @@ test('string and number raise error', () => {
   }
   expect(exception).toBeInstanceOf(RuntimeError);
   expect((exception as RuntimeError).message).toBe(
-    'Runtime error: (line: 4, col: 8): Right expression not a String - NumberValue'
+    'Runtime error: (line: 4, col: 8): Expected StringValue, but got NumberValue'
   );
 });
 

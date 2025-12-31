@@ -1,4 +1,5 @@
 import LuaInterpreter from './interpreter/LuaInterpreter';
+import { initializeMethaMethodsForBasicTypes } from './interpreter/metamethods';
 import {
   InternalListValue,
   StringValue,
@@ -31,6 +32,7 @@ class VMBuilder {
 
   build(): VM {
     const vm = new VM(this.credit);
+    initializeMethaMethodsForBasicTypes();
     this.envPreset.getKeys().forEach(key => {
       vm.setLuaVar(key, this.envPreset.get(key));
     });

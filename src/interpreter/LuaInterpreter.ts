@@ -474,42 +474,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       op = '__shl';
     }
 
-    const metatableOperation =
-      getMetatableOperation(left, op) || getMetatableOperation(right, op);
-
-    if (metatableOperation) {
-      return this.exec_function(
-        metatableOperation,
-        new InternalListValue([left, right]),
-        ctx
-      );
-    }
-
-    if (!(left instanceof NumberValue)) {
-      throw new RuntimeError(
-        `Expected NumberValue, but got ${left.constructor.name}`,
-        ctx
-      );
-    }
-    if (!(right instanceof NumberValue)) {
-      throw new RuntimeError(
-        `Expected NumberValue, but got ${right.constructor.name}`,
-        ctx
-      );
-    }
-    const l = (left as NumberValue).number;
-    const r = (right as NumberValue).number;
-    if (ctx.AMP()) {
-      return NumberValue.from(l & r);
-    } else if (ctx.PIPE()) {
-      return NumberValue.from(l | r);
-    } else if (ctx.SQUIG()) {
-      return NumberValue.from(l ^ r);
-    } else if (ctx.GG()) {
-      return NumberValue.from(l >> r);
-    } else {
-      return NumberValue.from(l << r);
-    }
+    return this.exec_operator(left, right, op, ctx);
   };
 
   visitExp_and = (ctx: Exp_andContext): Value => {
@@ -546,41 +511,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     } else {
       throw new NotYetImplemented('will never happen', ctx, 'N999');
     }
-    const metatableOperation =
-      getMetatableOperation(left, op) || getMetatableOperation(right, op);
-
-    if (metatableOperation) {
-      return this.exec_function(
-        metatableOperation,
-        new InternalListValue([left, right]),
-        ctx
-      );
-    }
-
-    if (!(left instanceof NumberValue)) {
-      throw new RuntimeError(
-        `Expected NumberValue, but got ${left.constructor.name}`,
-        ctx
-      );
-    }
-    if (!(right instanceof NumberValue)) {
-      throw new RuntimeError(
-        `Expected NumberValue, but got ${right.constructor.name}`,
-        ctx
-      );
-    }
-    const l = (left as NumberValue).number;
-    const r = (right as NumberValue).number;
-    if (ctx.STAR()) {
-      return new NumberValue(l * r);
-    } else if (ctx.SLASH()) {
-      return new NumberValue(l / r);
-    } else if (ctx.PER()) {
-      return new NumberValue(l % r);
-    } else if (ctx.SS()) {
-      return new NumberValue(Math.floor(l / r));
-    }
-    throw new NotYetImplemented('will never happen', ctx, 'N999');
+    return this.exec_operator(left, right, op, ctx);
   };
 
   visitExp_rel = (ctx: Exp_relContext): Value => {
@@ -594,114 +525,51 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       return BooleanValue.from(!this.compare_ee(left, right, ctx).boolean);
     }
     if (ctx.LT()) {
-      return this.compare_lt(left, right, ctx, false);
+      return this.compare_op(left, right, '__lt', ctx);
     }
     if (ctx.LE()) {
-      return this.compare_lt(left, right, ctx, true);
+      return this.compare_op(left, right, '__le', ctx);
     }
     if (ctx.GT()) {
-      return this.compare_lt(right, left, ctx, false);
+      return this.compare_op(left, right, '__lt', ctx, /* reversed: */ true);
     }
     if (ctx.GE()) {
-      return this.compare_lt(right, left, ctx, true);
+      return this.compare_op(left, right, '__le', ctx, /* reversed: */ true);
     }
     throw new NotYetImplemented('compare for non numbers', ctx, 'N999');
   };
 
-  private compare_lt(
+  private compare_op(
     left: Value,
     right: Value,
-    ctx: Exp_relContext,
-    le: boolean
+    op: string,
+    ctx: ExpContext,
+    reversed = false
   ): BooleanValue {
-    this.consumeCredit(ctx);
-
-    const op = le ? '__le' : '__lt';
-    const metatableOperation =
-      getMetatableOperation(left, op) || getMetatableOperation(right, op);
-
-    if (metatableOperation) {
-      return BooleanValue.from(
-        isTrue(
-          this.exec_function(
-            metatableOperation,
-            new InternalListValue([left, right]),
-            ctx
-          )
-        )
-      );
+    const result = this.exec_operator(left, right, op, ctx, reversed);
+    if (result instanceof BooleanValue) {
+      return result;
     }
-
-    if (left instanceof NumberValue) {
-      if (!(right instanceof NumberValue)) {
-        throw new RuntimeError(
-          `Right expression not a Number - ${right.constructor.name}`,
-          ctx
-        );
-      }
-      const less = (left as NumberValue).number < (right as NumberValue).number;
-      const eq = (left as NumberValue).number == (right as NumberValue).number;
-      return BooleanValue.from(less || (le && eq));
-    } else if (left instanceof StringValue) {
-      if (!(right instanceof StringValue)) {
-        throw new RuntimeError(
-          `Right expression not a String - ${right.constructor.name}`,
-          ctx
-        );
-      }
-      const less = (left as StringValue).string < (right as StringValue).string;
-      const eq = (left as StringValue).string == (right as StringValue).string;
-      return BooleanValue.from(less || (le && eq));
-    } else {
-      throw new RuntimeError(
-        `Can't compare type ${left.constructor.name}`,
-        ctx
-      );
-    }
+    return BooleanValue.from(isTrue(result));
   }
 
-  private compare_ee(
-    left: Value,
-    right: Value,
-    ctx: ParserRuleContext
-  ): BooleanValue {
+  private compare_ee(left: Value, right: Value, ctx: ExpContext): BooleanValue {
     const op = '__eq';
     const metatableOperation =
-      getMetatableOperation(left, op) || getMetatableOperation(right, op);
+      getMetatableOperatorFn(left, op) || getMetatableOperatorFn(right, op);
 
     if (left.constructor != right.constructor) {
       return BooleanValue.false();
-    } else if (
-      left instanceof NumberValue &&
-      (left as NumberValue).number == (right as NumberValue).number
-    ) {
-      return BooleanValue.true();
-    } else if (
-      left instanceof StringValue &&
-      (left as StringValue).string == (right as StringValue).string
-    ) {
-      return BooleanValue.true();
-    } else if (
-      left instanceof BooleanValue &&
-      (left as BooleanValue).boolean == (right as BooleanValue).boolean
-    ) {
-      return BooleanValue.true();
     } else if (left instanceof NilValue && right instanceof NilValue) {
       return BooleanValue.true();
     } else if (left == right) {
       return BooleanValue.true();
-    } else if (metatableOperation) {
-      return BooleanValue.from(
-        isTrue(
-          this.exec_function(
-            metatableOperation,
-            new InternalListValue([left, right]),
-            ctx
-          )
-        )
-      );
+    } else if (!metatableOperation) {
+      return BooleanValue.false();
     }
-    return BooleanValue.false();
+    return BooleanValue.from(
+      isTrue(this.exec_operator(left, right, '__eq', ctx))
+    );
   }
 
   visitStat_table_construnctor = (
@@ -715,60 +583,17 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     this.consumeCredit(ctx);
     const exp = firstValue(ctx.exp().accept(this));
     if (ctx.MINUS()) {
-      const metatableOperation = getMetatableOperation(exp, '__unm');
-
-      if (exp instanceof NumberValue) {
-        return new NumberValue(-1 * (exp as NumberValue).number);
-      } else if (metatableOperation) {
-        return this.exec_function(
-          metatableOperation,
-          new InternalListValue([exp, exp]),
-          ctx
-        );
-      } else {
-        throw new RuntimeError(
-          `expecting number, but got ${exp.constructor.name}`,
-          ctx
-        );
-      }
+      return this.exec_operator(exp, exp, '__unm', ctx);
     } else if (ctx.NOT()) {
       return BooleanValue.from(!isTrue(exp));
     } else if (ctx.POUND()) {
-      const metatableOperation = getMetatableOperation(exp, '__len');
-
-      if (exp instanceof StringValue) {
-        return NumberValue.from((exp as StringValue).string.length);
-      } else if (metatableOperation) {
-        return this.exec_function(
-          metatableOperation,
-          new InternalListValue([exp, exp]),
-          ctx
-        );
-      } else if (exp instanceof TableValue) {
-        return NumberValue.from((exp as TableValue).size());
-      } else {
-        throw new RuntimeError(
-          `expecting string or table, but got ${exp.constructor.name}`,
-          ctx
-        );
-      }
+      const fallbackFn =
+        exp instanceof TableValue
+          ? () => NumberValue.from((exp as TableValue).size())
+          : undefined;
+      return this.exec_operator(exp, exp, '__len', ctx, undefined, fallbackFn);
     } else if (ctx.SQUIG()) {
-      const metatableOperation = getMetatableOperation(exp, '__bnot');
-
-      if (exp instanceof NumberValue) {
-        return NumberValue.from(~(exp as NumberValue).number);
-      } else if (metatableOperation) {
-        return this.exec_function(
-          metatableOperation,
-          new InternalListValue([exp, exp]),
-          ctx
-        );
-      } else {
-        throw new RuntimeError(
-          `expecting number, but got ${exp.constructor.name}`,
-          ctx
-        );
-      }
+      return this.exec_operator(exp, exp, '__bnot', ctx);
     }
     throw new NotYetImplemented('will never happen', ctx, 'N999');
   };
@@ -799,34 +624,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     this.consumeCredit(ctx);
     const left = firstValue(ctx.exp(0).accept(this));
     const right = firstValue(ctx.exp(1).accept(this));
-
-    const op = '__pow';
-    const metatableOperation =
-      getMetatableOperation(left, op) || getMetatableOperation(right, op);
-
-    if (metatableOperation) {
-      return this.exec_function(
-        metatableOperation,
-        new InternalListValue([left, right]),
-        ctx
-      );
-    }
-
-    if (!(left instanceof NumberValue)) {
-      throw new RuntimeError(
-        `Expected NumberValue, but got ${left.constructor.name}`,
-        ctx
-      );
-    }
-    if (!(right instanceof NumberValue)) {
-      throw new RuntimeError(
-        `Expected NumberValue, but got ${right.constructor.name}`,
-        ctx
-      );
-    }
-    const l = (left as NumberValue).number;
-    const r = (right as NumberValue).number;
-    return new NumberValue(Math.pow(l, r));
+    return this.exec_operator(left, right, '__pow', ctx);
   };
 
   visitExp_number = (ctx: Exp_numberContext): Value => {
@@ -839,40 +637,8 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     const left = firstValue(ctx.exp(0).accept(this));
     const right = firstValue(ctx.exp(1).accept(this));
 
-    const op = '__concat';
-    const metatableOperation =
-      getMetatableOperation(left, op) || getMetatableOperation(right, op);
-
-    if (metatableOperation) {
-      return this.exec_function(
-        metatableOperation,
-        new InternalListValue([left, right]),
-        ctx
-      );
-    }
-
-    return StringValue.from(
-      this.valueToString(left) + this.valueToString(right)
-    );
+    return this.exec_operator(left, right, '__concat', ctx);
   };
-
-  private valueToString(value: Value): string {
-    if (value instanceof NilValue) {
-      return 'nil';
-    } else if (value instanceof NumberValue) {
-      return (value as NumberValue).number.toString();
-    } else if (value instanceof StringValue) {
-      return (value as StringValue).string;
-    } else if (value instanceof BooleanValue) {
-      return (value as BooleanValue).boolean.toString();
-    } else if (value instanceof TableValue) {
-      return 'table-support-tbd';
-    } else if (value instanceof FunctionValue) {
-      return (value as FunctionValue).asIdString();
-    } else {
-      return 'unkown_type';
-    }
-  }
 
   visitExp_vararg = (ctx: Exp_varargContext): Value => {
     this.consumeCredit(ctx);
@@ -894,38 +660,51 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     const right = firstValue(ctx.exp(1).accept(this));
 
     const op = ctx.PLUS() ? '__add' : '__sub';
+    return this.exec_operator(left, right, op, ctx);
+  };
+
+  private exec_operator = (
+    left: Value,
+    right: Value,
+    op: string,
+    ctx: ExpContext,
+    reversed = false,
+    fallbackFn = (): Value => {
+      throw new RuntimeError(
+        left.constructor.name === right.constructor.name
+          ? `Cannot perform ${op} on ${left.constructor.name}`
+          : `Cannot perform ${op} on ${left.constructor.name} and ${right.constructor.name}`,
+        ctx
+      );
+    }
+  ) => {
+    const tableMetatableOperation =
+      left instanceof TableValue
+        ? getMetatableOperatorFn(left, op)
+        : right instanceof TableValue
+          ? getMetatableOperatorFn(right, op)
+          : undefined;
     const metatableOperation =
-      getMetatableOperation(left, op) || getMetatableOperation(right, op);
+      tableMetatableOperation ||
+      getMetatableOperatorFn(left, op) ||
+      getMetatableOperatorFn(right, op);
 
-    if (metatableOperation) {
-      return this.exec_function(
-        metatableOperation,
-        new InternalListValue([left, right]),
-        ctx
-      );
+    if (!metatableOperation) {
+      return fallbackFn();
     }
-
-    if (!(left instanceof NumberValue)) {
-      throw new RuntimeError(
-        `Expected NumberValue, but got ${left.constructor.name}`,
-        ctx
-      );
+    const result = this.exec_function(
+      metatableOperation,
+      new InternalListValue(reversed ? [right, left] : [left, right]),
+      ctx
+    );
+    if (result instanceof InternalListValue) {
+      return result.getValueOrNil(1);
     }
-    if (!(right instanceof NumberValue)) {
-      throw new RuntimeError(
-        `Expected NumberValue, but got ${right.constructor.name}`,
-        ctx
-      );
-    }
-    if (ctx.PLUS()) {
-      return new NumberValue(
-        (left as NumberValue).number + (right as NumberValue).number
-      );
-    } else {
-      return new NumberValue(
-        (left as NumberValue).number - (right as NumberValue).number
-      );
-    }
+    /* should not reach here */
+    throw new RuntimeError(
+      `Cannot return from perform ${op} on ${left.constructor.name} and ${right.constructor.name}`,
+      ctx
+    );
   };
 
   visitExp_function_def = (ctx: Exp_function_defContext): Value => {
@@ -1489,7 +1268,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
   };
 }
 
-function getMetatableOperation(
+function getMetatableOperatorFn(
   table: Value,
   op: string
 ): FunctionValue | ExtFunction | undefined {
