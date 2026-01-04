@@ -12,6 +12,7 @@ import basicStdLib from './stdlib/basic';
 import mathStdLib from './stdlib/math';
 import stringStdLib from './stdlib/strings';
 import tableStdLib from './stdlib/table';
+import { createPackageLib, PackageLoaderProvider } from './stdlib/package';
 
 class VMBuilder {
   private envPreset = new TableValue();
@@ -22,6 +23,11 @@ class VMBuilder {
     this.envPreset.mergeInWithOverride(stringStdLib);
     this.envPreset.mergeInWithOverride(tableStdLib);
     this.envPreset.mergeInWithOverride(mathStdLib);
+    return this;
+  }
+
+  withRequire(packageLoader: PackageLoaderProvider): VMBuilder {
+    this.envPreset.mergeInWithOverride(createPackageLib(packageLoader));
     return this;
   }
 
@@ -76,7 +82,7 @@ class ExecutionThread {
   private readonly vars: Map<Value, Value> = new Map<Value, Value>();
   private readonly interpreter;
   private readonly name: StringValue;
-  static readonly __nameKey = new StringValue("__name");
+  static readonly __nameKey = new StringValue('__name');
 
   constructor(runCredits: number, name: string) {
     this.interpreter = new LuaInterpreter(runCredits);

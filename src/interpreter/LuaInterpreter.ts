@@ -134,6 +134,21 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     }
   }
 
+  rootScoped(scopeName: StringValue, f: () => Value): Value {
+    const scopeToRestore = this.currentScope;
+    let root = this.currentScope;
+    while (root.hasParent()) {
+      root = root.parent();
+    }
+    this.currentScope = VisibilityScope.childOf(root);
+    this.currentScope.setLocal(StringValue.from('__name'), scopeName);
+    try {
+      return f();
+    } finally {
+      this.currentScope = scopeToRestore;
+    }
+  }
+
   visitStart_ = (ctx: Start_Context): Value => {
     try {
       return ctx.chunk().accept(this);
