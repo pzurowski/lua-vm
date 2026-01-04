@@ -92,7 +92,11 @@ function flattenList(value: Value): InternalListValue {
 }
 
 function getOrNil(values: Value[], index: number): Value {
-  return index < values.length ? values[index] : new NilValue();
+  if (index < 0) {
+    index = values.length + index;
+  }
+
+  return 0 <= index && index < values.length ? values[index] : new NilValue();
 }
 
 export {
