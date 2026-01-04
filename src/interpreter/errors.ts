@@ -1,11 +1,20 @@
 import { ParserRuleContext } from 'antlr4/src/antlr4/context/ParserRuleContext';
 
 class VMError extends Error {
+  private _cause: unknown | undefined;
   protected _errorCode: string;
 
   constructor(message: string, errorCode = '0000') {
     super(message);
     this._errorCode = errorCode;
+  }
+
+  set cause(cause: unknown) {
+    this._cause = cause;
+  }
+
+  get cause(): unknown | undefined {
+    return this._cause;
   }
 
   get errorCode(): string {
@@ -25,19 +34,10 @@ class NotYetImplemented extends VMError {
 }
 
 class RuntimeError extends VMError {
-  private _cause: unknown | undefined;
   constructor(message: string, ctx: ParserRuleContext) {
     const line = ctx && ctx.start ? ctx.start.line : -1;
     const col = ctx && ctx.start ? ctx.start.column : -1;
     super(`Runtime error: (line: ${line}, col: ${col}): ${message}`);
-  }
-
-  set cause(cause: unknown) {
-    this._cause = cause;
-  }
-
-  get cause(): unknown | undefined {
-    return this._cause;
   }
 
   static message(msg: string): RuntimeError {

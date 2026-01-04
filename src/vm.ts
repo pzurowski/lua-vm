@@ -1,4 +1,5 @@
 import LuaInterpreter from './interpreter/LuaInterpreter';
+import { initializeMethaMethodsForBasicTypes } from './interpreter/metamethods';
 import {
   InternalListValue,
   StringValue,
@@ -11,6 +12,7 @@ import basicStdLib from './stdlib/basic';
 import mathStdLib from './stdlib/math';
 import stringStdLib from './stdlib/strings';
 import tableStdLib from './stdlib/table';
+import { createPackageLib, PackageLoaderProvider } from './stdlib/package';
 
 class VMBuilder {
   private envPreset = new TableValue();
@@ -24,6 +26,11 @@ class VMBuilder {
     return this;
   }
 
+  withRequire(packageLoader: PackageLoaderProvider): VMBuilder {
+    this.envPreset.mergeInWithOverride(createPackageLib(packageLoader));
+    return this;
+  }
+
   withRunCredit(credit: number): VMBuilder {
     this.credit = credit;
     return this;
@@ -31,6 +38,7 @@ class VMBuilder {
 
   build(): VM {
     const vm = new VM(this.credit);
+    initializeMethaMethodsForBasicTypes();
     this.envPreset.getKeys().forEach(key => {
       vm.setLuaVar(key, this.envPreset.get(key));
     });
@@ -45,6 +53,7 @@ class VMBuilder {
 class VM {
   private envPreset = new TableValue();
   private readonly credits;
+  private static seq = 1;
 
   constructor(credits: number) {
     this.credits = credits;
@@ -54,8 +63,8 @@ class VM {
     this.envPreset.set(key, value);
   }
 
-  newThread(): ExecutionThread {
-    const thread = new ExecutionThread(this.credits);
+  newThread(name = `/<VM:${VM.seq++}>`): ExecutionThread {
+    const thread = new ExecutionThread(this.credits, name);
     this.envPreset.getKeys().forEach(key => {
       const value = this.envPreset.get(key);
       thread.setLuaVar(key, value);
@@ -72,9 +81,12 @@ class VM {
 class ExecutionThread {
   private readonly vars: Map<Value, Value> = new Map<Value, Value>();
   private readonly interpreter;
+  private readonly name: StringValue;
+  static readonly __nameKey = new StringValue('__name');
 
-  constructor(runCredits: number) {
+  constructor(runCredits: number, name: string) {
     this.interpreter = new LuaInterpreter(runCredits);
+    this.name = new StringValue(name);
   }
 
   setLuaVar(name: Value, value: Value): ExecutionThread {
@@ -86,6 +98,7 @@ class ExecutionThread {
     this.vars.forEach((v, k) => {
       this.interpreter.setVar(k, v);
     });
+    this.interpreter.setVar(ExecutionThread.__nameKey, this.name);
     const result = executeWithInterpreter(lua, this.interpreter, false);
     return new ExecutionResult(result, this.interpreter.getAllGlobalVars());
   }
@@ -114,6 +127,10 @@ class ExecutionResult {
 
   globalVar(name: string): Value {
     return this.globalVars.get(StringValue.from(name));
+  }
+
+  globalVarKeys(): Value[] {
+    return this.globalVars.getKeys();
   }
 }
 
