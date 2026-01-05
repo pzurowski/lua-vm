@@ -835,7 +835,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
   private exec_ext_function(
     f: ExtFunction,
     args: InternalListValue,
-    ctx: ParserRuleContext
+    ctx?: ParserRuleContext
   ): Value {
     const list_args = flattenList(args);
     return f.run(list_args, ctx, this);
@@ -844,7 +844,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
   exec_function(
     f: FunctionValue | ExtFunction,
     args: InternalListValue,
-    ctx: ParserRuleContext
+    ctx?: ParserRuleContext
   ): Value {
     return f instanceof FunctionValue
       ? this.exec_lua_function(f as FunctionValue, args)

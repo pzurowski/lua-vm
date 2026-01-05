@@ -12,7 +12,7 @@ import basicStdLib from './stdlib/basic';
 import mathStdLib from './stdlib/math';
 import stringStdLib from './stdlib/strings';
 import tableStdLib from './stdlib/table';
-import { createPackageLib, PackageLoaderProvider } from './stdlib/package';
+import { createPackageLib } from './stdlib/package';
 
 class VMBuilder {
   private envPreset = new TableValue();
@@ -26,8 +26,11 @@ class VMBuilder {
     return this;
   }
 
-  withRequire(packageLoader: PackageLoaderProvider): VMBuilder {
-    this.envPreset.mergeInWithOverride(createPackageLib(packageLoader));
+  withRequire(
+    readFile: (luaFile: string) => string,
+    existFile: (luaFile: string) => boolean
+  ): VMBuilder {
+    this.envPreset.mergeInWithOverride(createPackageLib(readFile, existFile));
     return this;
   }
 

@@ -40,7 +40,7 @@ export default class ExtFunction extends Value {
 
   run(
     args: InternalListValue,
-    ctx: ParserRuleContext,
+    ctx: ParserRuleContext | undefined,
     interpreter: LuaInterpreter
   ): InternalListValue {
     try {

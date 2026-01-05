@@ -34,7 +34,7 @@ class NotYetImplemented extends VMError {
 }
 
 class RuntimeError extends VMError {
-  constructor(message: string, ctx: ParserRuleContext) {
+  constructor(message: string, ctx?: ParserRuleContext) {
     const line = ctx && ctx.start ? ctx.start.line : -1;
     const col = ctx && ctx.start ? ctx.start.column : -1;
     super(`Runtime error: (line: ${line}, col: ${col}): ${message}`);
