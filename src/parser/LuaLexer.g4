@@ -94,7 +94,8 @@ fragment ExponentPart: [eE] [+-]? Digit+;
 fragment HexExponentPart: [pP] [+-]? Digit+;
 
 fragment EscapeSequence:
-    '\\' [abfnrtvz"'|$#\\] // World of Warcraft Lua additionally escapes |$# 
+    '\\' [abfnrtvz"'|$#\\] // World of Warcraft Lua additionally escapes |$#
+    | '\\' 'z' [ \t\u000C\r\n]*
     | '\\' '\r'? '\n'
     | DecimalEscape
     | HexEscape

@@ -1225,12 +1225,16 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
 
   visitString_string = (ctx: String_stringContext): Value => {
     const text = ctx.getText();
-    return StringValue.from(text.substring(1, text.length - 1));
+    return StringValue.from(
+      text.substring(1, text.length - 1).replace(/\\z[\s\n]*/gm, '')
+    );
   };
 
   visitString_charstring = (ctx: String_charstringContext): Value => {
     const text = ctx.CHARSTRING().getText();
-    return StringValue.from(text.substring(1, text.length - 1));
+    return StringValue.from(
+      text.substring(1, text.length - 1).replace(/\\z[\s\n]*/gm, '')
+    );
   };
 
   visitString_longstring = (ctx: String_longstringContext): Value => {
