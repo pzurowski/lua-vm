@@ -1091,7 +1091,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
   };
 
   visitArgs_table_constructor = (ctx: Args_table_constructorContext): Value => {
-    return ctx.tableconstructor().accept(this);
+    return new InternalListValue([ctx.tableconstructor().accept(this)]);
   };
 
   visitArgs_string = (ctx: Args_stringContext): Value => {

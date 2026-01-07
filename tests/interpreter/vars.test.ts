@@ -1,9 +1,11 @@
 import LuaInterpreter from '@src/interpreter/LuaInterpreter';
 import {
+  FunctionValue,
   InternalListValue,
   NilValue,
   NumberValue,
   StringValue,
+  TableValue,
 } from '@src/interpreter/types';
 
 import { executeWithInterpreter } from '@src/interpreter/utils';
@@ -175,4 +177,39 @@ test('function call with not enough args', () => {
   expect(number_value(result as InternalListValue, 1)).toBe(10);
   expect((result as InternalListValue).get(2)).toBeInstanceOf(NilValue);
   expect(number_value(result as InternalListValue, 3)).toBe(3);
+});
+
+test('method call with syntactic sugar against table constructor', () => {
+  const lua = `
+    function f(a, b)
+      return a, b;
+    end;
+    t = {ff = f}
+    
+    a1, a2 = t:ff(10, 20)
+    b1, b2 = t:ff{10, 20}
+   
+    return a1, a2, b1, b2
+  `;
+  const interpreter = new LuaInterpreter();
+  initializeMethaMethodsForBasicTypes();
+  const result = executeWithInterpreter(lua, interpreter);
+  expect(result).toBeInstanceOf(InternalListValue);
+  expect((result as InternalListValue).size()).toBe(4);
+  expect((result as InternalListValue).get(1)).toBeInstanceOf(TableValue);
+  expect(number_value(result as InternalListValue, 2)).toBe(10);
+  expect((result as InternalListValue).get(3)).toBeInstanceOf(TableValue);
+  expect(
+    ((result as InternalListValue).get(3) as TableValue).get(
+      StringValue.from('ff')
+    )
+  ).toBeInstanceOf(FunctionValue);
+  expect((result as InternalListValue).get(4)).toBeInstanceOf(TableValue);
+  expect(
+    (
+      ((result as InternalListValue).get(4) as TableValue).get(
+        NumberValue.from(1)
+      ) as NumberValue
+    ).number
+  ).toBe(10);
 });
