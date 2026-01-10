@@ -13,6 +13,7 @@ import mathStdLib from './stdlib/math';
 import stringStdLib from './stdlib/strings';
 import tableStdLib from './stdlib/table';
 import { createPackageLib } from './stdlib/package';
+import { __name } from '@src/interpreter/consts';
 
 class VMBuilder {
   private envPreset = new TableValue();
@@ -66,7 +67,7 @@ class VM {
     this.envPreset.set(key, value);
   }
 
-  newThread(name = `/<VM:${VM.seq++}>`): ExecutionThread {
+  newThread(name = `/VM-${VM.seq++}`): ExecutionThread {
     const thread = new ExecutionThread(this.credits, name);
     this.envPreset.getKeys().forEach(key => {
       const value = this.envPreset.get(key);
@@ -85,7 +86,6 @@ class ExecutionThread {
   private readonly vars: Map<Value, Value> = new Map<Value, Value>();
   private readonly interpreter;
   private readonly name: StringValue;
-  static readonly __nameKey = new StringValue('__name');
 
   constructor(runCredits: number, name: string) {
     this.interpreter = new LuaInterpreter(runCredits);
@@ -101,7 +101,7 @@ class ExecutionThread {
     this.vars.forEach((v, k) => {
       this.interpreter.setVar(k, v);
     });
-    this.interpreter.setVar(ExecutionThread.__nameKey, this.name);
+    this.interpreter.setVar(__name, this.name);
     const result = executeWithInterpreter(lua, this.interpreter, false);
     return new ExecutionResult(result, this.interpreter.getAllGlobalVars());
   }

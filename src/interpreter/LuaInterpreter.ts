@@ -87,11 +87,19 @@ import {
 } from './types';
 import ReturnStmt from './ReturnStmt';
 import VisibilityScope from './VisibilityScope';
-import { LuaLangError, NotYetImplemented, RuntimeError } from './errors';
+import {
+  ExtFunctionError,
+  LuaLangError,
+  NotYetImplemented,
+  RequireError,
+  RuntimeError,
+} from './errors';
 import BreakStmt from './BreakStmt';
 import { firstValue, flattenList, isFalse, isTrue } from './utils';
 import ExtFunction from './ExtFunction';
 import { ParserRuleContext, TerminalNode } from 'antlr4';
+import { __name } from '@src/interpreter/consts';
+import { TraceFrame } from '@src/interpreter/TraceFrame';
 
 export default class LuaInterpreter extends LuaParserVisitor<Value> {
   private currentScope: VisibilityScope;
@@ -105,7 +113,10 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
 
   private consumeCredit(ctx: ParserRuleContext): void {
     if (this.runCredits == 0) {
-      throw new RuntimeError('The program runs too long', ctx);
+      throw new RuntimeError(
+        'The program runs too long',
+        new TraceFrame(ctx, this.currentScope)
+      );
     } else {
       this.runCredits--;
     }
@@ -119,6 +130,14 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     // this function is called after interpreter is done
     // as a result, current scope is the global scope
     return this.currentScope.get(key);
+  }
+
+  getCurrentScopeName(): StringValue {
+    const name = this.currentScope.get(__name);
+    if (!(name instanceof StringValue)) {
+      return StringValue.from('<unnamed>');
+    }
+    return name;
   }
 
   setVar(name: Value, value: Value): void {
@@ -141,7 +160,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       root = root.parent();
     }
     this.currentScope = VisibilityScope.childOf(root);
-    this.currentScope.setLocal(StringValue.from('__name'), scopeName);
+    this.currentScope.setLocal(__name, scopeName);
     try {
       return f();
     } finally {
@@ -154,10 +173,10 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       return ctx.chunk().accept(this);
     } catch (error) {
       if (error instanceof BreakStmt) {
-        const breakCtx = (error as BreakStmt).ctx;
-        const line = breakCtx && breakCtx.start ? breakCtx.start.line : -1;
-        const col = breakCtx && breakCtx.start ? breakCtx.start.column : -1;
-        throw new LuaLangError('Break called outside of a loop', line, col);
+        throw new LuaLangError(
+          'Break called outside of a loop',
+          new TraceFrame(error.ctx, this.currentScope)
+        );
       } else {
         throw error;
       }
@@ -198,7 +217,11 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
   };
 
   visitStat_label = (ctx: Stat_labelContext): Value => {
-    throw new NotYetImplemented('label', ctx, 'N001');
+    throw new NotYetImplemented(
+      'label',
+      new TraceFrame(ctx, this.currentScope),
+      'N001'
+    );
   };
 
   visitStat_break = (ctx: Stat_breakContext): Value => {
@@ -206,7 +229,11 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
   };
 
   visitStat_goto = (ctx: Stat_gotoContext): Value => {
-    throw new NotYetImplemented('goto', ctx, 'N001');
+    throw new NotYetImplemented(
+      'goto',
+      new TraceFrame(ctx, this.currentScope),
+      'N001'
+    );
   };
 
   visitStat_do = (ctx: Stat_doContext): Value => {
@@ -272,16 +299,28 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
         ? firstValue(ctx.exp(2).accept(this))
         : NumberValue.from(1);
     if (!(initValue instanceof NumberValue)) {
-      throw new RuntimeError('init value is not a number', ctx);
+      throw new RuntimeError(
+        'init value is not a number',
+        new TraceFrame(ctx, this.currentScope)
+      );
     }
     if (!(limit instanceof NumberValue)) {
-      throw new RuntimeError('limit value is not a number', ctx);
+      throw new RuntimeError(
+        'limit value is not a number',
+        new TraceFrame(ctx, this.currentScope)
+      );
     }
     if (!(step instanceof NumberValue)) {
-      throw new RuntimeError('step is not a number', ctx);
+      throw new RuntimeError(
+        'step is not a number',
+        new TraceFrame(ctx, this.currentScope)
+      );
     }
     if (step.number == 0) {
-      throw new RuntimeError('step is Zero', ctx);
+      throw new RuntimeError(
+        'step is Zero',
+        new TraceFrame(ctx, this.currentScope)
+      );
     }
     const n = limit.number;
     const s = step.number;
@@ -301,7 +340,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
         if (!(afterBodyI instanceof NumberValue)) {
           throw new RuntimeError(
             'FOR loop variable is not a number any more (changed in loop body)',
-            ctx
+            new TraceFrame(ctx, this.currentScope)
           );
         }
         i = (afterBodyI as NumberValue).number;
@@ -322,7 +361,10 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       !(iteratorFunction instanceof FunctionValue) &&
       !(iteratorFunction instanceof ExtFunction)
     ) {
-      throw new RuntimeError('Iterator is not a function', ctx);
+      throw new RuntimeError(
+        'Iterator is not a function',
+        new TraceFrame(ctx, this.currentScope)
+      );
     }
     do {
       const iterationResult = flattenList(
@@ -387,7 +429,11 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
   };
 
   visitAttrib = (ctx: AttribContext): Value => {
-    throw new NotYetImplemented('attribute', ctx, 'N002');
+    throw new NotYetImplemented(
+      'attribute',
+      new TraceFrame(ctx, this.currentScope),
+      'N002'
+    );
   };
 
   visitRetstat = (ctx: RetstatContext): Value => {
@@ -404,13 +450,17 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     } else {
       throw new RuntimeError(
         "This 'break' should not happen; open an issue on GitHub",
-        ctx
+        new TraceFrame(ctx, this.currentScope)
       );
     }
   };
 
   visitLabel = (ctx: LabelContext): Value => {
-    throw new NotYetImplemented('label', ctx, 'N001');
+    throw new NotYetImplemented(
+      'label',
+      new TraceFrame(ctx, this.currentScope),
+      'N001'
+    );
   };
 
   visitFuncname = (ctx: FuncnameContext): Value => {
@@ -422,7 +472,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     if (!(table instanceof TableValue)) {
       throw new RuntimeError(
         `expecting table, got ${table.constructor.name}`,
-        ctx
+        new TraceFrame(ctx, this.currentScope)
       );
     }
     for (let i = 1; i < ctx.NAME_list().length - 1; i++) {
@@ -432,7 +482,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       if (!(table instanceof TableValue)) {
         throw new RuntimeError(
           `got ${table.constructor.name} instead of table`,
-          ctx
+          new TraceFrame(ctx, this.currentScope)
         );
       }
     }
@@ -561,7 +611,11 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     } else if (ctx.LL()) {
       op = '__shl';
     } else {
-      throw new NotYetImplemented('will never happen', ctx, 'N999');
+      throw new NotYetImplemented(
+        'will never happen',
+        new TraceFrame(ctx, this.currentScope),
+        'N999'
+      );
     }
 
     const result = this.exec_operator(left, right, op, ctx, reversed);
@@ -590,7 +644,11 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     } else if (ctx.SQUIG()) {
       op = '__bnot';
     } else {
-      throw new NotYetImplemented('will never happen', ctx, 'N999');
+      throw new NotYetImplemented(
+        'will never happen',
+        new TraceFrame(ctx, this.currentScope),
+        'N999'
+      );
     }
     return this.exec_operator(exp, exp, op, ctx, false, fallbackFn);
   };
@@ -647,7 +705,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
         left.constructor.name === right.constructor.name
           ? `Cannot perform ${op} on ${left.constructor.name}`
           : `Cannot perform ${op} on ${left.constructor.name} and ${right.constructor.name}`,
-        ctx
+        new TraceFrame(ctx, this.currentScope)
       );
     }
   ) => {
@@ -676,7 +734,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     /* should not reach here */
     throw new RuntimeError(
       `Cannot return from perform ${op} on ${left.constructor.name} and ${right.constructor.name}`,
-      ctx
+      new TraceFrame(ctx, this.currentScope)
     );
   };
 
@@ -702,7 +760,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     if (!(top instanceof TableValue)) {
       throw new RuntimeError(
         `Table expected, got ${top.constructor.name}`,
-        ctx
+        new TraceFrame(ctx, this.currentScope)
       );
     }
     const key = ctx.NAME()
@@ -750,7 +808,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
 
     throw new RuntimeError(
       `__newindex must be a function or table, got ${metamethodOrTable.constructor.name}`,
-      ctx
+      new TraceFrame(ctx, this.currentScope)
     );
   }
 
@@ -835,16 +893,34 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
   private exec_ext_function(
     f: ExtFunction,
     args: InternalListValue,
-    ctx?: ParserRuleContext
+    ctx: ParserRuleContext
   ): Value {
     const list_args = flattenList(args);
-    return f.run(list_args, ctx, this);
+    try {
+      return f.run(list_args, ctx, this);
+    } catch (error) {
+      const traceFrame = new TraceFrame(ctx, this.currentScope);
+      if (error instanceof ExtFunctionError) {
+        const err = new RuntimeError(error.message, traceFrame);
+        err.cause = error;
+        throw err;
+      } else if (error instanceof RequireError) {
+        throw error;
+      } else {
+        const err = new RuntimeError(
+          `Error in external function "${f.name}"`,
+          traceFrame
+        );
+        err.cause = error;
+        throw err;
+      }
+    }
   }
 
   exec_function(
     f: FunctionValue | ExtFunction,
     args: InternalListValue,
-    ctx?: ParserRuleContext
+    ctx: ParserRuleContext
   ): Value {
     return f instanceof FunctionValue
       ? this.exec_lua_function(f as FunctionValue, args)
@@ -871,7 +947,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
 
     throw new RuntimeError(
       `Can't execute non-function: ${value.constructor.name}`,
-      ctx
+      new TraceFrame(ctx, this.currentScope)
     );
   }
 
@@ -909,7 +985,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       if (!(value instanceof TableValue)) {
         throw new RuntimeError(
           `got ${value.constructor.name} instead of table`,
-          ctx
+          new TraceFrame(ctx, this.currentScope)
         );
       }
       const child = ctx.getChild(i);
@@ -964,7 +1040,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
 
     throw new RuntimeError(
       `__index must be a function or table, got ${metamethodOrTable.constructor.name}`,
-      ctx
+      new TraceFrame(ctx, this.currentScope)
     );
   }
 
@@ -984,7 +1060,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     if (!(table instanceof TableValue)) {
       throw new RuntimeError(
         `expect table for ":", got ${table.constructor.name}`,
-        ctx
+        new TraceFrame(ctx, this.currentScope)
       );
     }
     const fName = ctx.NAME_list()[ctx.NAME_list().length - 1].getText();
@@ -1044,7 +1120,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     if (!(table instanceof TableValue)) {
       throw new RuntimeError(
         `expect table for ":", got ${table.constructor.name}`,
-        ctx
+        new TraceFrame(ctx, this.currentScope)
       );
     }
     const fName = ctx.NAME_list()[ctx.NAME_list().length - 1].getText();
@@ -1072,7 +1148,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
     if (!(table instanceof TableValue)) {
       throw new RuntimeError(
         `expect table for ":", got ${table.constructor.name}`,
-        ctx
+        new TraceFrame(ctx, this.currentScope)
       );
     }
     const fName = ctx.NAME_list()[ctx.NAME_list().length - 1].getText();
@@ -1184,7 +1260,11 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
   };
 
   visitFieldsep = (ctx: FieldsepContext): Value => {
-    throw new NotYetImplemented('field sep', ctx, 'N999');
+    throw new NotYetImplemented(
+      'field sep',
+      new TraceFrame(ctx, this.currentScope),
+      'N999'
+    );
   };
 
   visitNumber_int = (ctx: Number_intContext): Value => {
@@ -1209,7 +1289,10 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       /^0x([0-9a-fA-F]+)?(?:\.([0-9a-fA-F]*))?p([+-]?\d+)$/
     );
     if (!match) {
-      throw new RuntimeError(`Invalid Lua hex float: ${str}`, ctx);
+      throw new RuntimeError(
+        `Invalid Lua hex float: ${str}`,
+        new TraceFrame(ctx, this.currentScope)
+      );
     }
     const [_, intPart = '0', fracPart = '', exponentStr] = match;
     const exponent = parseInt(exponentStr, 10);

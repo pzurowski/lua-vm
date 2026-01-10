@@ -92,7 +92,7 @@ test('not implemented feature', () => {
   }
   expect(exception).toBeInstanceOf(NotYetImplemented);
   expect((exception as NotYetImplemented).message).toBe(
-    '[N001] Feature not yet implemented(line: 3, col: 4): goto'
+    '[N001] Feature not yet implemented: goto'
   );
 });
 
@@ -157,7 +157,7 @@ test('calling nil causes RuntimeError', () => {
   }
   expect(exception).toBeInstanceOf(RuntimeError);
   expect((exception as RuntimeError).message).toBe(
-    "Runtime error: (line: 3, col: 2): Can't execute non-function: NilValue"
+    "Runtime error: Can't execute non-function: NilValue"
   );
 });
 
@@ -174,7 +174,7 @@ test('calling non function causes RuntimeError', () => {
   }
   expect(exception).toBeInstanceOf(RuntimeError);
   expect((exception as RuntimeError).message).toBe(
-    'Runtime error: (line: 3, col: 2): Unsupported operation: __call'
+    'Runtime error: Unsupported operation: __call'
   );
 });
 
@@ -224,7 +224,7 @@ test('break outside of loop', () => {
   }
   expect(exception).toBeInstanceOf(LuaLangError);
   expect((exception as LuaLangError).message).toBe(
-    'Lua: Break called outside of a loop (line: 4, col: 2)'
+    'Lua: Break called outside of a loop'
   );
 });
 
@@ -242,7 +242,7 @@ test('incorrect lua code', () => {
   }
   expect(exception).toBeInstanceOf(LuaLangError);
   expect((exception as LuaLangError).message).toBe(
-    "Lua: no viable alternative at input 'a ==' (line: 3, col: 4)"
+    "Lua: no viable alternative at input 'a =='"
   );
 });
 
@@ -262,7 +262,7 @@ test('infinite loop does not last forever', () => {
   }
   expect(exception).toBeInstanceOf(RuntimeError);
   expect((exception as RuntimeError).message).toBe(
-    'Runtime error: (line: 5, col: 8): The program runs too long'
+    'Runtime error: The program runs too long'
   );
 });
 
@@ -281,6 +281,6 @@ test('limit running time', () => {
   }
   expect(exception).toBeInstanceOf(RuntimeError);
   expect((exception as RuntimeError).message).toBe(
-    'Runtime error: (line: 3, col: 8): The program runs too long'
+    'Runtime error: The program runs too long'
   );
 });

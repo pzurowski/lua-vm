@@ -1,4 +1,3 @@
-import { ParserRuleContext } from 'antlr4';
 import { RuntimeError } from './interpreter/errors';
 import {
   BooleanValue,
@@ -11,8 +10,9 @@ import {
 } from './interpreter/types';
 import { VM } from './vm';
 import ExtFunction from './interpreter/ExtFunction';
+import { __name } from './interpreter/consts';
 
-function luaToTs(value: Value): any {
+function luaToTs(value: Value, filename: string): any {
   if (value instanceof NilValue) {
     return undefined;
   } else if (value instanceof BooleanValue) {
@@ -29,13 +29,13 @@ function luaToTs(value: Value): any {
     const result: Record<string, any> = {};
     const keys = (value as TableValue).getKeys();
     keys.forEach(k => {
-      result[k.toString()] = luaToTs((value as TableValue).get(k));
+      result[k.toString()] = luaToTs((value as TableValue).get(k), filename);
     });
     return result;
   } else {
     throw new RuntimeError(
       `[J001] No auto convertion for ${value.constructor.name}`,
-      {} as ParserRuleContext
+      { filename, line: 0, column: 0, info: '' }
     );
   }
 }
@@ -62,7 +62,9 @@ export default class VMMarshaller {
     if (result.hasReturnValue()) {
       const list = result.returnValueAsList();
       this._lastResult = list;
-      return list.map((value: Value) => luaToTs(value));
+      return list.map((value: Value) =>
+        luaToTs(value, result.globalVar(__name.string).toString())
+      );
     } else {
       return [];
     }

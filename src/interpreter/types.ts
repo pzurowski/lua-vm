@@ -1,6 +1,7 @@
 import { BlockContext } from '../parser/LuaParser';
 import LuaInterpreter from './LuaInterpreter';
 import VisibilityScope from './VisibilityScope';
+import { ParserRuleContext } from 'antlr4';
 
 abstract class Value {
   abstract asIdString(): string;
@@ -381,6 +382,34 @@ class InternalVar extends Value {
   }
 }
 
+class InternalContextValue extends Value {
+  private _ctx: ParserRuleContext;
+
+  constructor(ctx: ParserRuleContext) {
+    super();
+    this._ctx = ctx;
+  }
+
+  get ctx(): ParserRuleContext {
+    return this._ctx;
+  }
+  asIdString(): string {
+    throw new Error('Method not implemented.');
+  }
+  toString(): string {
+    throw new Error('Method not implemented.');
+  }
+
+  getMetatable(): TableValue | NilValue {
+    throw new Error('Not implemented');
+  }
+
+  setMetatable(value: TableValue | NilValue): void {
+    void value;
+    throw new Error('Not implemented');
+  }
+}
+
 class InterpreterValue extends Value {
   private _interpreter: LuaInterpreter;
 
@@ -424,5 +453,6 @@ export {
   InternalListValue,
   InternalPairValue,
   InternalVar,
+  InternalContextValue,
   InterpreterValue,
 };

@@ -6,6 +6,7 @@ import {
   StringValue,
   Value,
 } from '@src/interpreter/types';
+import { VMError } from '@src/interpreter/errors';
 
 function assert_return_number(result: Value, expected: number) {
   expect(result).toBeInstanceOf(InternalListValue);
@@ -36,13 +37,34 @@ function expectToBeBool(value: Value, b: boolean): void {
   expect((value as BooleanValue).boolean).toBe(b);
 }
 
-function expectToBeString(value: Value, s: string): void {
+function expectToBeString(value: Value, s: string | RegExp): void {
   expect(value).toBeInstanceOf(StringValue);
-  expect((value as StringValue).string).toBe(s);
+  if (typeof s === 'string') {
+    expect((value as StringValue).string).toBe(s);
+  } else {
+    expect((value as StringValue).string).toMatch(s);
+  }
 }
 
 function expectToBeNil(value: Value): void {
   expect(value).toBeInstanceOf(NilValue);
+}
+
+export function expectToThrowVMError(fn: () => void) {
+  try {
+    fn();
+    const expectable = expect(() => void 0);
+    expectable.toThrow();
+    return expectable;
+  } catch (e) {
+    if (!(e instanceof VMError)) {
+      expect(e && typeof e === 'object' ? e.constructor.name : e).toBe(
+        'VMError derived'
+      );
+      return expect(e);
+    }
+    return expect(e.toString());
+  }
 }
 
 export {

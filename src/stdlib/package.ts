@@ -1,16 +1,23 @@
-import { ExtFunctionError } from '@src/interpreter/errors';
+import { ExtFunctionError, RequireError } from '@src/interpreter/errors';
 import ExtFunction from '@src/interpreter/ExtFunction';
 import {
   FunctionValue,
   InternalListValue,
-  InterpreterValue,
   NilValue,
   NumberValue,
   StringValue,
   TableValue,
   Value,
 } from '@src/interpreter/types';
-import { executeWithInterpreter, getOrNil } from '@src/interpreter/utils';
+import {
+  executeWithInterpreter,
+  getOrNil,
+  requestContext,
+  requestInterpreter,
+  requestString,
+} from '@src/interpreter/utils';
+import { __name } from '@src/interpreter/consts';
+import { TraceFrame } from '@src/interpreter/TraceFrame';
 
 export type PackageNameNormalize = (
   packageNamePart1: string,
@@ -81,6 +88,7 @@ export function createPackageLib(
   function requireFn(args: Value[]): Value[] {
     const rawModuleName = requestString(args);
     const interpreter = requestInterpreter(args);
+    const ctx = requestContext(args);
 
     for (const key of searchers.getKeys()) {
       const searcher = searchers.get(key);
@@ -93,7 +101,7 @@ export function createPackageLib(
       const result = interpreter.interpreter.exec_function(
         searcher,
         new InternalListValue([rawModuleName]),
-        undefined
+        ctx.ctx
       );
       if (!(result instanceof InternalListValue)) {
         continue;
@@ -123,7 +131,7 @@ export function createPackageLib(
         const loaderResult = interpreter.interpreter.exec_function(
           moduleLoader,
           new InternalListValue([resolvedModuleName]),
-          undefined
+          ctx.ctx
         );
         if (
           loaded.get(resolvedModuleName) instanceof NilValue &&
@@ -134,7 +142,13 @@ export function createPackageLib(
       }
       return [loaded.get(resolvedModuleName)];
     }
-    throw new ExtFunctionError(`module not found: ${rawModuleName}`, '9002');
+    throw new RequireError(
+      `module not found: ${rawModuleName}`,
+      new TraceFrame(
+        ctx.ctx,
+        interpreter.interpreter.getCurrentScopeName().string
+      )
+    );
   }
 
   function wrapSearcherResult(moduleName: string): Value[] {
@@ -165,9 +179,7 @@ export function createPackageLib(
     if (!rawModuleName.string.startsWith('.')) {
       return [new NilValue()];
     }
-    const currentPackageNameRaw = interpreter.interpreter.getGlobalVar(
-      StringValue.from('__name')
-    );
+    const currentPackageNameRaw = interpreter.interpreter.getGlobalVar(__name);
     const currentPackageName =
       currentPackageNameRaw instanceof StringValue
         ? currentPackageNameRaw.string
@@ -206,15 +218,19 @@ export function createPackageLib(
   function loader(args: Value[]): Value[] {
     const moduleName = requestString(args);
     const interpreter = requestInterpreter(args);
+    const ctx = requestContext(args);
     let lua: string;
     let module = new NilValue();
     loaded.set(moduleName, module);
     try {
       lua = loadFile(moduleName.string);
     } catch (e) {
-      const error = new ExtFunctionError(
+      const error = new RequireError(
         `Unable to load module source: ${moduleName}`,
-        '9000'
+        new TraceFrame(
+          ctx.ctx,
+          interpreter.interpreter.getCurrentScopeName().string
+        )
       );
       error.cause = e;
       throw error;
@@ -224,9 +240,12 @@ export function createPackageLib(
         executeWithInterpreter(lua, interpreter.interpreter, false)
       );
     } catch (e) {
-      const error = new ExtFunctionError(
+      const error = new RequireError(
         `Unable to execute module: ${moduleName}`,
-        '9001'
+        new TraceFrame(
+          ctx.ctx,
+          interpreter.interpreter.getCurrentScopeName().string
+        )
       );
       error.cause = e;
       throw error;
@@ -240,20 +259,4 @@ export function createPackageLib(
 
 function notImplemented(): Value[] {
   throw new ExtFunctionError('not implemented');
-}
-
-function requestString(args: Value[], index = 0) {
-  const result = getOrNil(args, index);
-  if (!(result instanceof StringValue)) {
-    throw new ExtFunctionError('parameter is not string');
-  }
-  return result;
-}
-
-function requestInterpreter(args: Value[]) {
-  const interpreter = getOrNil(args, -1);
-  if (!(interpreter instanceof InterpreterValue)) {
-    throw new ExtFunctionError('parameter is not interpreter');
-  }
-  return interpreter;
 }

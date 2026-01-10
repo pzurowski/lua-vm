@@ -2,7 +2,6 @@ import { ExtFunctionError } from '@src/interpreter/errors';
 import ExtFunction from '@src/interpreter/ExtFunction';
 import {
   BooleanValue,
-  FunctionValue,
   InternalListValue,
   InterpreterValue,
   NilValue,
@@ -11,30 +10,39 @@ import {
   TableValue,
   Value,
 } from '@src/interpreter/types';
-import { flattenList, getOrNil, isTrue } from '@src/interpreter/utils';
-import { ParserRuleContext } from 'antlr4';
+import {
+  flattenList,
+  getOrNil,
+  isTrue,
+  requestContext,
+  requestFunctionOrNil,
+  requestInterpreter,
+  requestNumberOrNil,
+  requestString,
+  requestTable,
+} from '@src/interpreter/utils';
 
 function concat(args: Value[]): Value[] {
-  const table = getOrNil(args, 0);
-  if (!(table instanceof TableValue)) {
-    throw new ExtFunctionError('concat requires first argument to be a table');
-  }
-  const sep = getOrNil(args, 1);
-  if (!(sep instanceof StringValue)) {
-    throw new ExtFunctionError('concat requires separator to be a string');
-  }
-  const iArg = getOrNil(args, 2);
-  if (!(iArg instanceof NilValue)) {
-    if (!(iArg instanceof NumberValue)) {
-      throw new ExtFunctionError('concat requires index to be a number');
-    }
-  }
-  const jArg = getOrNil(args, 3);
-  if (!(jArg instanceof NilValue)) {
-    if (!(jArg instanceof NumberValue)) {
-      throw new ExtFunctionError('concat requires index to be a number');
-    }
-  }
+  const table = requestTable(
+    args,
+    0,
+    'concat requires first argument to be a table'
+  );
+  const sep = requestString(
+    args,
+    1,
+    'concat requires separator to be a string'
+  );
+  const iArg = requestNumberOrNil(
+    args,
+    2,
+    'concat requires index to be a number'
+  );
+  const jArg = requestNumberOrNil(
+    args,
+    3,
+    'concat requires index to be a number'
+  );
   const list = tableToList(table);
   const i = iArg instanceof NilValue ? 0 : iArg.number - 1;
   const j = jArg instanceof NilValue ? list.length - 1 : jArg.number - 1;
@@ -56,10 +64,7 @@ function tableToList(table: TableValue): Value[] {
 }
 
 function insert(args: Value[]): Value[] {
-  const table = getOrNil(args, 0);
-  if (!(table instanceof TableValue)) {
-    throw new ExtFunctionError('table has to be provided');
-  }
+  const table = requestTable(args, 0, 'table has to be provided');
   const list = tableToList(table);
   const a = getOrNil(args, 1);
   const b = getOrNil(args, 2);
@@ -93,17 +98,9 @@ function listToTable(table: TableValue, list: Value[]): TableValue {
 }
 
 function remove(args: Value[]): Value[] {
-  const table = getOrNil(args, 0);
-  if (!(table instanceof TableValue)) {
-    throw new ExtFunctionError('table has to be provided');
-  }
+  const table = requestTable(args, 0, 'table has to be provided');
   const list = tableToList(table);
-  const posArg = getOrNil(args, 1);
-  if (!(posArg instanceof NilValue)) {
-    if (!(posArg instanceof NumberValue)) {
-      throw new ExtFunctionError('pos has to be a number');
-    }
-  }
+  const posArg = requestNumberOrNil(args, 1, 'pos has to be a number');
   const pos = posArg instanceof NilValue ? list.length - 1 : posArg.number - 1;
   if (pos < 0 || pos >= list.length) {
     throw new ExtFunctionError('pos is out of range');
@@ -115,25 +112,25 @@ function remove(args: Value[]): Value[] {
 }
 
 function sort(args: Value[]): Value[] {
-  const table = getOrNil(args, 0);
-  if (!(table instanceof TableValue)) {
-    throw new ExtFunctionError('table has to be provided');
-  }
+  const table = requestTable(args, 0, 'table has to be provided');
   const list = tableToList(table);
-  const interpreter = getOrNil(args, args.length - 1);
+  const comparatorOrNil = requestFunctionOrNil(
+    args,
+    1,
+    'comparator muse be a function'
+  );
   const comparator =
-    args.length == 2 ? ExtFunction.of(defaultComparator) : args[1];
-  if (
-    !(comparator instanceof FunctionValue) &&
-    !(comparator instanceof ExtFunction)
-  ) {
-    throw new ExtFunctionError('comparator muse be a function');
-  }
+    comparatorOrNil instanceof NilValue
+      ? ExtFunction.of(defaultComparator)
+      : comparatorOrNil;
+  const interpreter = requestInterpreter(args);
+  const ctx = requestContext(args);
+
   list.sort((a, b) => {
     const result = (interpreter as InterpreterValue).interpreter.exec_function(
       comparator,
       new InternalListValue([a, b]),
-      {} as ParserRuleContext
+      ctx.ctx
     );
     const aIsFirst = flattenList(result).getValueOrNil(1);
     return isTrue(aIsFirst) ? -1 : 1;

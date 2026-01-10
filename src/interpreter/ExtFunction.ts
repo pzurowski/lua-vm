@@ -1,6 +1,6 @@
 import { ParserRuleContext } from 'antlr4';
-import { ExtFunctionError, RuntimeError } from './errors';
 import {
+  InternalContextValue,
   InternalListValue,
   InterpreterValue,
   NilValue,
@@ -12,7 +12,7 @@ import LuaInterpreter from './LuaInterpreter';
 export default class ExtFunction extends Value {
   private readonly uuid: string;
   private readonly f: (args: Value[]) => Value[];
-  private readonly name: string;
+  readonly name: string;
   private readonly passInterpreter: boolean;
 
   static of(f: (args: Value[]) => Value[], name = ''): ExtFunction {
@@ -40,32 +40,21 @@ export default class ExtFunction extends Value {
 
   run(
     args: InternalListValue,
-    ctx: ParserRuleContext | undefined,
+    ctx: ParserRuleContext,
     interpreter: LuaInterpreter
   ): InternalListValue {
-    try {
-      const result = this.f(
-        this.passInterpreter
-          ? args.asList().concat([new InterpreterValue(interpreter)])
-          : args.asList()
-      );
-      return new InternalListValue(
-        result.length == 0 ? [new NilValue()] : result
-      );
-    } catch (error) {
-      if (error instanceof ExtFunctionError) {
-        const err = new RuntimeError((error as ExtFunctionError).message, ctx);
-        err.cause = error;
-        throw err;
-      } else {
-        const err = new RuntimeError(
-          `Error in external function "${this.name}"`,
-          ctx
-        );
-        err.cause = error;
-        throw err;
-      }
-    }
+    const result = this.f(
+      args
+        .asList()
+        .concat(
+          this.passInterpreter
+            ? [new InterpreterValue(interpreter), new InternalContextValue(ctx)]
+            : [new InternalContextValue(ctx)]
+        )
+    );
+    return new InternalListValue(
+      result.length == 0 ? [new NilValue()] : result
+    );
   }
 
   asIdString(): string {

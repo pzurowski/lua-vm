@@ -1,6 +1,7 @@
 import { RuntimeError } from '@src/interpreter/errors';
 import ExtFunction from '@src/interpreter/ExtFunction';
 import { NumberValue, StringValue, Value } from '@src/interpreter/types';
+import { TraceFrame } from '@src/interpreter/TraceFrame';
 import { VMBuilder } from '@src/vm';
 import {
   expectToBeBool,
@@ -35,7 +36,7 @@ test('assert', () => {
   }
   expect(exception).toBeInstanceOf(RuntimeError);
   expect((exception as RuntimeError).message).toBe(
-    'Runtime error: (line: 3, col: 6): assertion failed!'
+    'Runtime error: assertion failed!'
   );
 });
 
@@ -52,7 +53,7 @@ test('error', () => {
   }
   expect(exception).toBeInstanceOf(RuntimeError);
   expect((exception as RuntimeError).message).toBe(
-    'Runtime error: (line: 3, col: 6): error called'
+    'Runtime error: error called'
   );
 });
 
@@ -177,7 +178,7 @@ test('pcall with lua function throwing error', () => {
   expectToBeBool(result.returnValueAsList()[0], false);
   expectToBeString(
     result.returnValueAsList()[1],
-    "Runtime error: (line: 3, col: 23): Can't execute non-function: NilValue"
+    "Runtime error: Can't execute non-function: NilValue"
   );
 });
 
@@ -225,7 +226,15 @@ test('pcall with external function throwing RuntimeError error', () => {
             return status, error
             `;
   function add(_args: Value[]): Value[] {
-    throw RuntimeError.message('run-time');
+    throw new RuntimeError(
+      'run-time',
+      new TraceFrame({
+        line: 0,
+        column: 0,
+        filename: 'basic.test.ts',
+        info: '',
+      })
+    );
   }
   const vm = new VMBuilder().witStdLib().build();
   const thread = vm.newThread();
@@ -235,10 +244,7 @@ test('pcall with external function throwing RuntimeError error', () => {
   expect(result.hasReturnValue()).toBeTruthy();
   expect(result.returnValueAsList().length).toBe(2);
   expectToBeBool(result.returnValueAsList()[0], false);
-  expectToBeString(
-    result.returnValueAsList()[1],
-    'Runtime error: (line: -1, col: -1): run-time'
-  );
+  expectToBeString(result.returnValueAsList()[1], 'Runtime error: run-time');
 });
 
 test.skip('print', () => {

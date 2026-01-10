@@ -58,7 +58,7 @@ test('external function errors', () => {
   }
   expect(exception).toBeInstanceOf(RuntimeError);
   expect((exception as RuntimeError).message).toBe(
-    'Runtime error: (line: 5, col: 8): Error in external function "add"'
+    'Runtime error: Error in external function "add"'
   );
   expect((exception as RuntimeError).cause).toBeInstanceOf(Error);
 });
@@ -88,7 +88,7 @@ test('external function errors with non Exception value', () => {
   }
   expect(exception).toBeInstanceOf(RuntimeError);
   expect((exception as RuntimeError).message).toBe(
-    'Runtime error: (line: 5, col: 8): Error in external function "add"'
+    'Runtime error: Error in external function "add"'
   );
   expect((exception as RuntimeError).cause).toBe(42);
 });
@@ -109,6 +109,6 @@ test('bad lua code', () => {
   }
   expect(exception).toBeInstanceOf(LuaLangError);
   expect((exception as LuaLangError).message).toBe(
-    "Lua: mismatched input ':' expecting 'end' (line: 3, col: 16)"
+    "Lua: mismatched input ':' expecting 'end'"
   );
 });

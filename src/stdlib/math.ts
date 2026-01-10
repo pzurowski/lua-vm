@@ -1,4 +1,3 @@
-import { ExtFunctionError } from '@src/interpreter/errors';
 import ExtFunction from '@src/interpreter/ExtFunction';
 import {
   NilValue,
@@ -7,13 +6,10 @@ import {
   TableValue,
   Value,
 } from '@src/interpreter/types';
-import { getOrNil } from '@src/interpreter/utils';
+import { countRegularArguments, requestNumber } from '@src/interpreter/utils';
 
 function getNumberOrError(args: Value[]): number {
-  const n = getOrNil(args, 0);
-  if (!(n instanceof NumberValue)) {
-    throw new ExtFunctionError('not a number parameter');
-  }
+  const n = requestNumber(args);
   return n.number;
 }
 
@@ -33,16 +29,13 @@ function floor(args: Value[]): Value[] {
 }
 
 function minMax(args: Value[], max: boolean): Value[] {
-  if (args.length == 0) {
+  const regularArgumentsLength = countRegularArguments(args);
+  if (regularArgumentsLength === 0) {
     return [new NilValue()];
   }
-  getNumberOrError(args);
-  let result = args[0] as NumberValue;
-  for (let i = 1; i < args.length; i++) {
-    const n = getOrNil(args, i);
-    if (!(n instanceof NumberValue)) {
-      throw new ExtFunctionError('an element is not a number');
-    }
+  let result = requestNumber(args);
+  for (let i = 1; i < regularArgumentsLength; i++) {
+    const n = requestNumber(args, i);
     if (
       (max && result.number < n.number) ||
       (!max && result.number > n.number)

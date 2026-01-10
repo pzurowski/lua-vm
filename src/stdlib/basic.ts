@@ -4,15 +4,19 @@ import {
   BooleanValue,
   FunctionValue,
   InternalListValue,
-  InterpreterValue,
   NilValue,
   NumberValue,
   StringValue,
   TableValue,
   Value,
 } from '@src/interpreter/types';
-import { getOrNil, isFalse } from '@src/interpreter/utils';
-import { ParserRuleContext } from 'antlr4';
+import {
+  countRegularArguments,
+  getOrNil,
+  isFalse,
+  requestContext,
+  requestInterpreter,
+} from '@src/interpreter/utils';
 
 function assert(args: Value[]): Value[] {
   if (isFalse(getOrNil(args, 0))) {
@@ -84,13 +88,15 @@ function pcall(args: Value[]): Value[] {
       StringValue.from("can't call a non function"),
     ];
   }
-  const fArgs = args.slice(1, args.length - 1);
-  const interpreter = getOrNil(args, args.length - 1);
+  const interpreter = requestInterpreter(args);
+  const ctx = requestContext(args);
+  const regularArgumentsLength = countRegularArguments(args);
+  const fArgs = args.slice(1, regularArgumentsLength);
   try {
-    const result = (interpreter as InterpreterValue).interpreter.exec_function(
+    const result = interpreter.interpreter.exec_function(
       f,
       new InternalListValue(fArgs),
-      {} as ParserRuleContext
+      ctx.ctx
     );
     return [BooleanValue.true(), result];
   } catch (error) {
@@ -108,29 +114,33 @@ function pcall(args: Value[]): Value[] {
 }
 
 function print(args: Value[]): Value[] {
-  const output = args.map(a => a.toString()).join(',');
+  const output = args
+    .slice(0, countRegularArguments(args))
+    .map(a => a.toString())
+    .join(',');
   console.log(output);
   return [];
 }
 
 function select(args: Value[]): Value[] {
   const selector = getOrNil(args, 0);
+  const regularArgumentsLength = countRegularArguments(args);
   if (selector instanceof NumberValue) {
     const n = (selector as NumberValue).number;
     if (n == 0) {
       throw new ExtFunctionError("first param can't be zero");
     }
     if (n > 0) {
-      return args.slice(n);
+      return args.slice(n, regularArgumentsLength);
     } else {
-      return args.slice(args.length + n);
+      return args.slice(regularArgumentsLength + n, regularArgumentsLength);
     }
   } else if (selector instanceof StringValue) {
     const s = (selector as StringValue).string;
     if (s !== '#') {
       throw new ExtFunctionError("first param has to be '#' or a number");
     }
-    return [NumberValue.from(args.length - 1)];
+    return [NumberValue.from(regularArgumentsLength - 1)];
   } else {
     throw new ExtFunctionError("expect a number of '#' as the first parameter");
   }
