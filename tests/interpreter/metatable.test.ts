@@ -282,4 +282,18 @@ describe('metatable', () => {
     expectToBeBool(result.globalVar('r2'), true);
     expectToBeNil(result.globalVar('r3'));
   });
+
+  test('setmetatable', () => {
+    const lua = `
+        t = {}
+        m = { name = "meta" }
+        r1 = setmetatable(t, m)
+    `;
+
+    const result = new VMBuilder().witStdLib().build().executeOnce(lua);
+
+    const t = result.globalVar('t');
+    const r1 = result.globalVar('r1');
+    expect(r1).toBe(t);
+  });
 });

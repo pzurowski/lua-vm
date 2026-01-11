@@ -207,7 +207,7 @@ function setMetatable(args: Value[]): Value[] {
 
   try {
     table.setMetatable(metatable);
-    return [];
+    return [table];
   } catch (e) {
     if (e instanceof Error) {
       throw new ExtFunctionError(e.message);
