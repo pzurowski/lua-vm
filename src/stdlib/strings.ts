@@ -1,6 +1,8 @@
 import ExtFunction from '@src/interpreter/ExtFunction';
 import {
   BooleanValue,
+  FunctionValue,
+  InternalListValue,
   NilValue,
   NumberValue,
   StringValue,
@@ -8,12 +10,117 @@ import {
   Value,
 } from '@src/interpreter/types';
 import {
+  isFalse,
   requestBooleanOrNil,
+  requestContext,
+  requestInterpreter,
   requestNumber,
   requestNumberOrNil,
   requestString,
   requestStringOrNil,
 } from '@src/interpreter/utils';
+
+function gsub(args: Value[]): Value[] {
+  const s = requestString(args, 0, 'first parameter is not string');
+  const pattern = requestString(args, 1, 'pattern parameter is not string');
+  const repl = args[2];
+  const nArg = requestNumberOrNil(args, 3, 'n parameter is not number');
+  const n = nArg instanceof NumberValue ? nArg.number : Infinity;
+
+  const interpreterValue = requestInterpreter(args);
+  const interpreter = interpreterValue.interpreter;
+  const ctx = requestContext(args).ctx;
+
+  if (
+    !(repl instanceof StringValue) &&
+    !(repl instanceof TableValue) &&
+    !(repl instanceof FunctionValue) &&
+    !(repl instanceof ExtFunction)
+  ) {
+    throw new Error('string.gsub: replacement must be a string, table, or function');
+  }
+
+  let count = 0;
+  let result = '';
+  let lastIndex = 0;
+
+  // TODO: Full Lua Pattern Support
+  const regex = new RegExp(pattern.string, 'g');
+  let match: RegExpExecArray | null;
+
+  while (count < n && (match = regex.exec(s.string)) !== null) {
+    const fullMatch = match[0];
+    const matchIndex = match.index;
+
+    // Append part before match
+    result += s.string.substring(lastIndex, matchIndex);
+
+    const captures: string[] = [];
+    if (match.length > 1) {
+      for (let i = 1; i < match.length; i++) {
+        captures.push(match[i]);
+      }
+    } else {
+      captures.push(fullMatch);
+    }
+
+    let replacement: string | undefined;
+
+    if (repl instanceof StringValue) {
+      replacement = repl.string.replace(/%([0-9%])/g, (m, g) => {
+        if (g === '%') return '%';
+        const d = parseInt(g, 10);
+        if (d === 0) return fullMatch;
+        return match?.[d] === undefined ? m : match[d];
+      });
+    } else if (repl instanceof TableValue) {
+      const key = StringValue.from(captures[0]);
+      const value = repl.get(key);
+      if (!(value instanceof NilValue) && !isFalse(value)) {
+        replacement = value.toString();
+      }
+    } else if (repl instanceof FunctionValue || repl instanceof ExtFunction) {
+      const callArgs = captures.map(c => StringValue.from(c));
+      const callResult = interpreter.exec_function(
+        repl,
+        new InternalListValue(callArgs),
+        ctx
+      );
+      const firstRes =
+        callResult instanceof InternalListValue
+          ? callResult.getValueOrNil(1)
+          : callResult;
+
+      if (!(firstRes instanceof NilValue) && !isFalse(firstRes)) {
+        replacement = firstRes.toString();
+      }
+    }
+
+    if (replacement !== undefined) {
+      result += replacement;
+    } else {
+      result += fullMatch;
+    }
+
+    lastIndex = matchIndex + fullMatch.length;
+    count++;
+
+    // Prevent infinite loop with empty matches
+    if (fullMatch.length === 0) {
+      if (lastIndex < s.string.length) {
+        result += s.string[lastIndex];
+        lastIndex++;
+        regex.lastIndex = lastIndex;
+      } else {
+        break;
+      }
+    }
+  }
+
+  result += s.string.substring(lastIndex);
+
+  return [StringValue.from(result), NumberValue.from(count)];
+}
 
 function find(args: Value[]): Value[] {
   const s = requestString(args, 0, 'first parameter is not string');
@@ -112,6 +219,7 @@ function sub(args: Value[]): Value[] {
 
 const functions = new TableValue();
 functions.set(StringValue.from('find'), ExtFunction.of(find));
+functions.set(StringValue.from('gsub'), ExtFunction.WithInterpreter(gsub));
 functions.set(StringValue.from('len'), ExtFunction.of(len));
 functions.set(StringValue.from('lower'), ExtFunction.of(lower));
 functions.set(StringValue.from('upper'), ExtFunction.of(upper));

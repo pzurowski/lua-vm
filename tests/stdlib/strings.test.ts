@@ -70,3 +70,65 @@ test('string function', () => {
   expectToBeString(result.globalVar('sub3'), '23456');
   expectToBeString(result.globalVar('sub4'), '456');
 });
+
+test('gsub basic', () => {
+  const lua = `
+    res1, c1 = string.gsub("hello world", "hello", "hi")
+    res2, c2 = string.gsub("banana", "a", "o", 2)
+    res3, c3 = string.gsub("hello world", "l", "L")
+    return res1, c1, res2, c2, res3, c3
+  `;
+  const vm = new VMBuilder().witStdLib().build();
+  const result = vm.executeOnce(lua);
+  expectToBeString(result.globalVar('res1'), 'hi world');
+  expectToBeNumber(result.globalVar('c1'), 1);
+  expectToBeString(result.globalVar('res2'), 'bonona');
+  expectToBeNumber(result.globalVar('c2'), 2);
+  expectToBeString(result.globalVar('res3'), 'heLLo worLd');
+  expectToBeNumber(result.globalVar('c3'), 3);
+});
+
+test('gsub with captures', () => {
+  const lua = `
+    res, c = string.gsub("hello world", "([a-z]+)", "%%1=%1")
+    return res, c
+  `;
+  const vm = new VMBuilder().witStdLib().build();
+  const result = vm.executeOnce(lua);
+  expectToBeString(result.globalVar('res'), '%1=hello %1=world');
+  expectToBeNumber(result.globalVar('c'), 2);
+});
+
+test('gsub with captures simple', () => {
+  const lua = `
+    res, c = string.gsub("hello world", "([a-z]+)", "%1 %1")
+    return res, c
+  `;
+  const vm = new VMBuilder().witStdLib().build();
+  const result = vm.executeOnce(lua);
+  expectToBeString(result.globalVar('res'), 'hello hello world world');
+  expectToBeNumber(result.globalVar('c'), 2);
+});
+
+test('gsub with table', () => {
+  const lua = `
+    t = {h="H", e="E"}
+    res, c = string.gsub("he", ".", t)
+    return res, c
+  `;
+  const vm = new VMBuilder().witStdLib().build();
+  const result = vm.executeOnce(lua);
+  expectToBeString(result.globalVar('res'), 'HE');
+  expectToBeNumber(result.globalVar('c'), 2);
+});
+
+test('gsub with function', () => {
+  const lua = `
+    res, c = string.gsub("hello", ".", function(s) return string.upper(s) end)
+    return res, c
+  `;
+  const vm = new VMBuilder().witStdLib().build();
+  const result = vm.executeOnce(lua);
+  expectToBeString(result.globalVar('res'), 'HELLO');
+  expectToBeNumber(result.globalVar('c'), 5);
+});
