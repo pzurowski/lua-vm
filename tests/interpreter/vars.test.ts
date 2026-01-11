@@ -213,3 +213,22 @@ test('method call with syntactic sugar against table constructor', () => {
     ).number
   ).toBe(10);
 });
+
+test('not provided function argument should be a nil', () => {
+  const lua = `
+    function foo(param)
+      bar = param
+      return param
+    end
+    
+    return foo(), bar
+  `;
+
+  const interpreter = new LuaInterpreter();
+  initializeMethaMethodsForBasicTypes();
+  const result = executeWithInterpreter(lua, interpreter);
+  expect(result).toBeInstanceOf(InternalListValue);
+  expect((result as InternalListValue).size()).toBe(2);
+  expect((result as InternalListValue).get(1)).toBeInstanceOf(NilValue);
+  expect((result as InternalListValue).get(2)).toBeInstanceOf(NilValue);
+});

@@ -271,7 +271,7 @@ class InternalListValue extends Value {
   }
 
   getValueOrNil(index: number) {
-    if (index <= this._list.length) {
+    if (index <= this._list.length && index > 0) {
       return this._list[index - 1];
     } else {
       return new NilValue();
