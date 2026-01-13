@@ -98,7 +98,7 @@ import BreakStmt from './BreakStmt';
 import { firstValue, flattenList, isFalse, isTrue } from './utils';
 import ExtFunction from './ExtFunction';
 import { ParserRuleContext, TerminalNode } from 'antlr4';
-import { __name, __stringLibName } from '@src/interpreter/consts';
+import { __name, stringLibName } from '@src/interpreter/consts';
 import { TraceFrame } from '@src/interpreter/TraceFrame';
 
 export default class LuaInterpreter extends LuaParserVisitor<Value> {
@@ -1067,10 +1067,10 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       while (globalScope.hasParent()) {
         globalScope = globalScope.parent();
       }
-      const stringsTable = globalScope.get(__stringLibName);
+      const stringsTable = globalScope.get(stringLibName);
       if(!(stringsTable instanceof TableValue)) {
         throw new RuntimeError(
-          `expect table for global ${__stringLibName}. Is stdlib provided?`,
+          `expect table for global ${stringLibName}. Is stdlib provided?`,
           new TraceFrame(ctx, this.currentScope)
         );
       }
