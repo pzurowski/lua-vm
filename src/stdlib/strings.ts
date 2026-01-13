@@ -20,6 +20,7 @@ import {
   requestStringOrNil,
 } from '@src/interpreter/utils';
 import { stringLibName } from '@src/interpreter/consts';
+import { ExtFunctionError } from '@src/interpreter/errors';
 
 function gsub(args: Value[]): Value[] {
   const s = requestString(args, 0, 'first parameter is not string');
@@ -38,7 +39,9 @@ function gsub(args: Value[]): Value[] {
     !(repl instanceof FunctionValue) &&
     !(repl instanceof ExtFunction)
   ) {
-    throw new Error('string.gsub: replacement must be a string, table, or function');
+    throw new ExtFunctionError(
+      'string.gsub: replacement must be a string, table, or function'
+    );
   }
 
   let count = 0;
@@ -218,8 +221,82 @@ function sub(args: Value[]): Value[] {
   return [StringValue.from(s.string.substring(startIndex, endIndex))];
 }
 
+function format(args: Value[]): Value[] {
+  const formatStr = requestString(args).string;
+  let argIndex = 1;
+
+  const result = formatStr.replace(
+    /%(0?(\d+))?(\.?(\d+))?([dgifs%])/g,
+    (match, _widthGroup, width, _precGroup, precision, type) => {
+      if (type === '%') {
+        return '%';
+      }
+
+      const val = args[argIndex++];
+      if (val === undefined) {
+        throw new ExtFunctionError(
+          'bad argument #' + argIndex + " to 'format' (no value)"
+        );
+      }
+
+      switch (type) {
+        case 's': {
+          const s =
+            val instanceof StringValue
+              ? val.string
+              : val instanceof NumberValue
+                ? val.number.toString()
+                : String(val);
+          return s;
+        }
+        case 'd':
+        case 'i': {
+          let n = val instanceof NumberValue ? val.number : Number(val);
+          n = n < 0 ? Math.ceil(n) : Math.floor(n);
+          let s = Math.abs(n).toString();
+          if (width) {
+            const w = parseInt(width, 10);
+            const padChar =
+              _widthGroup && _widthGroup.startsWith('0') ? '0' : ' ';
+            s = s.padStart(n < 0 ? w - 1 : w, padChar);
+          }
+          if (n < 0) {
+            s = '-' + s;
+          }
+          return s;
+        }
+        case 'f': {
+          const n = val instanceof NumberValue ? val.number : Number(val);
+          let s: string;
+          if (precision) {
+            s = n.toFixed(parseInt(precision, 10));
+          } else {
+            s = n.toFixed(6);
+          }
+          return s;
+        }
+        case 'g': {
+          // simple version
+          const n = val instanceof NumberValue ? val.number : Number(val);
+          return precision
+            ? n
+                .toPrecision(parseInt(precision, 10))
+                .replace(/(\.[0-9]*?)0+$/, '$1')
+                .replace(/\.$/, '')
+            : n.toString();
+        }
+        default:
+          return match;
+      }
+    }
+  );
+
+  return [StringValue.from(result)];
+}
+
 const functions = new TableValue();
 functions.set(StringValue.from('find'), ExtFunction.of(find));
+functions.set(StringValue.from('format'), ExtFunction.of(format));
 functions.set(StringValue.from('gsub'), ExtFunction.WithInterpreter(gsub));
 functions.set(StringValue.from('len'), ExtFunction.of(len));
 functions.set(StringValue.from('lower'), ExtFunction.of(lower));

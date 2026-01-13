@@ -144,3 +144,28 @@ test('gsub with function', () => {
   expectToBeString(result.globalVar('res'), 'HELLO');
   expectToBeNumber(result.globalVar('c'), 5);
 });
+
+test('string.format', () => {
+  const lua = `
+    f1 = string.format("%%")
+    f2 = string.format("hello %s", "world")
+    f3 = string.format("%d", 123)
+    f4 = string.format("%02d", 7)
+    f5 = string.format("%02i", 9)
+    f6 = string.format("%.2f", 3.14159)
+    f7 = string.format("%g", 123.456)
+    f8 = string.format("mixed %s %d %.2f %%", "val", 42, 1.234)
+    f9 = string.format("%03d", -7)
+  `;
+  const vm = new VMBuilder().witStdLib().build();
+  const result = vm.executeOnce(lua);
+  expectToBeString(result.globalVar('f1'), '%');
+  expectToBeString(result.globalVar('f2'), 'hello world');
+  expectToBeString(result.globalVar('f3'), '123');
+  expectToBeString(result.globalVar('f4'), '07');
+  expectToBeString(result.globalVar('f5'), '09');
+  expectToBeString(result.globalVar('f6'), '3.14');
+  expectToBeString(result.globalVar('f7'), '123.456');
+  expectToBeString(result.globalVar('f8'), 'mixed val 42 1.23 %');
+  expectToBeString(result.globalVar('f9'), '-07');
+});
