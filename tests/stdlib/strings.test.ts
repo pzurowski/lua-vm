@@ -71,6 +71,18 @@ test('string function', () => {
   expectToBeString(result.globalVar('sub4'), '456');
 });
 
+test('string shorthand function', () => {
+  const lua = `
+  foo = "foo"
+  foolen = foo:len()
+  foorep = foo:rep(2)
+  `;
+  const vm = new VMBuilder().witStdLib().build();
+  const result = vm.executeOnce(lua);
+  expectToBeNumber(result.globalVar('foolen'), 3);
+  expectToBeString(result.globalVar('foorep'), 'foofoo');
+});
+
 test('gsub basic', () => {
   const lua = `
     res1, c1 = string.gsub("hello world", "hello", "hi")

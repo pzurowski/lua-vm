@@ -19,6 +19,7 @@ import {
   requestString,
   requestStringOrNil,
 } from '@src/interpreter/utils';
+import { __stringLibName } from '@src/interpreter/consts';
 
 function gsub(args: Value[]): Value[] {
   const s = requestString(args, 0, 'first parameter is not string');
@@ -228,6 +229,6 @@ functions.set(StringValue.from('reverse'), ExtFunction.of(reverse));
 functions.set(StringValue.from('sub'), ExtFunction.of(sub));
 
 const stringStdLib = new TableValue();
-stringStdLib.set(StringValue.from('string'), functions);
+stringStdLib.set(__stringLibName, functions);
 
 export default stringStdLib;

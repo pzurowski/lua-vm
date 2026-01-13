@@ -98,7 +98,7 @@ import BreakStmt from './BreakStmt';
 import { firstValue, flattenList, isFalse, isTrue } from './utils';
 import ExtFunction from './ExtFunction';
 import { ParserRuleContext, TerminalNode } from 'antlr4';
-import { __name } from '@src/interpreter/consts';
+import { __name, __stringLibName } from '@src/interpreter/consts';
 import { TraceFrame } from '@src/interpreter/TraceFrame';
 
 export default class LuaInterpreter extends LuaParserVisitor<Value> {
@@ -982,14 +982,17 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       (expIndex < exps.length || nameIndex < names.length)
     ) {
       value = firstValue(value);
+      const child = ctx.getChild(i);
+      const childText = child.getText();
+      if ((value instanceof StringValue) && childText === ':'){
+        break;
+      }
       if (!(value instanceof TableValue)) {
         throw new RuntimeError(
           `got ${value.constructor.name} instead of table`,
           new TraceFrame(ctx, this.currentScope)
         );
       }
-      const child = ctx.getChild(i);
-      const childText = child.getText();
       let key: Value;
       if (childText === '.') {
         key = StringValue.from(names[nameIndex].getText());
@@ -1046,7 +1049,8 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
 
   visitFcall_name_ext = (ctx: Fcall_name_extContext): Value => {
     this.consumeCredit(ctx);
-    const table = firstValue(
+    let fun: Value;
+    const value = firstValue(
       this.walkExpAndName(
         this.currentScope.get(StringValue.from(ctx.NAME(0).getText())),
         ctx.exp_list(),
@@ -1057,16 +1061,30 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
         ctx
       )
     );
-    if (!(table instanceof TableValue)) {
+    const fName = ctx.NAME_list()[ctx.NAME_list().length - 1].getText();
+    if (value instanceof StringValue) {
+      let globalScope = this.currentScope;
+      while (globalScope.hasParent()) {
+        globalScope = globalScope.parent();
+      }
+      const stringsTable = globalScope.get(__stringLibName);
+      if(!(stringsTable instanceof TableValue)) {
+        throw new RuntimeError(
+          `expect table for global ${__stringLibName}. Is stdlib provided?`,
+          new TraceFrame(ctx, this.currentScope)
+        );
+      }
+      fun = stringsTable.get(StringValue.from(fName));
+    } else if (value instanceof TableValue) {
+      fun = value.get(StringValue.from(fName));
+    } else {
       throw new RuntimeError(
-        `expect table for ":", got ${table.constructor.name}`,
+        `expect table for ":", got ${value.constructor.name}`,
         new TraceFrame(ctx, this.currentScope)
       );
     }
-    const fName = ctx.NAME_list()[ctx.NAME_list().length - 1].getText();
-    const fun = (table as TableValue).get(StringValue.from(fName));
     const list_args = (ctx.args().accept(this) as InternalListValue).asList();
-    list_args.unshift(table);
+    list_args.unshift(value);
     return this.callValue(fun, new InternalListValue(list_args), ctx);
   };
 
