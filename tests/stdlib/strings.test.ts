@@ -169,3 +169,50 @@ test('string.format', () => {
   expectToBeString(result.globalVar('f8'), 'mixed val 42 1.23 %');
   expectToBeString(result.globalVar('f9'), '-07');
 });
+
+test('string.byte', () => {
+  const lua = `
+    s = "ABCDE"
+    b1 = string.byte(s)
+    b2 = string.byte(s, 2)
+    b3, b4, b5 = string.byte(s, 2, 4)
+    b6 = string.byte(s, -1)
+    b7 = string.byte(s, 10)
+    b8 = string.byte(s, 2, 1)
+  `;
+  const vm = new VMBuilder().witStdLib().build();
+  const result = vm.executeOnce(lua);
+  expectToBeNumber(result.globalVar('b1'), 65);
+  expectToBeNumber(result.globalVar('b2'), 66);
+  expectToBeNumber(result.globalVar('b3'), 66);
+  expectToBeNumber(result.globalVar('b4'), 67);
+  expectToBeNumber(result.globalVar('b5'), 68);
+  expectToBeNumber(result.globalVar('b6'), 69);
+  expectToBeNil(result.globalVar('b7'));
+  expectToBeNil(result.globalVar('b8'));
+});
+
+test('string.char', () => {
+  const lua = `
+    c1 = string.char(65, 66, 67)
+    c2 = string.char()
+    c3 = string.char(10)
+  `;
+  const vm = new VMBuilder().witStdLib().build();
+  const result = vm.executeOnce(lua);
+  expectToBeString(result.globalVar('c1'), 'ABC');
+  expectToBeString(result.globalVar('c2'), '');
+  expectToBeString(result.globalVar('c3'), '\n');
+});
+
+test('string.byte with shorthand', () => {
+  const lua = `
+    s = "ABC"
+    b1 = s:byte()
+    b2 = s:byte(2)
+  `;
+  const vm = new VMBuilder().witStdLib().build();
+  const result = vm.executeOnce(lua);
+  expectToBeNumber(result.globalVar('b1'), 65);
+  expectToBeNumber(result.globalVar('b2'), 66);
+});

@@ -18,6 +18,7 @@ import {
   requestNumberOrNil,
   requestString,
   requestStringOrNil,
+  countRegularArguments,
 } from '@src/interpreter/utils';
 import { stringLibName } from '@src/interpreter/consts';
 import { ExtFunctionError } from '@src/interpreter/errors';
@@ -221,6 +222,44 @@ function sub(args: Value[]): Value[] {
   return [StringValue.from(s.string.substring(startIndex, endIndex))];
 }
 
+function byte(args: Value[]): Value[] {
+  const s = requestString(args, 0, 'first parameter is not string');
+  const iArg = requestNumberOrNil(args, 1, 'i parameter is not number');
+  const jArg = requestNumberOrNil(args, 2, 'j parameter is not number');
+
+  const strLength = s.string.length;
+  const i = iArg instanceof NumberValue ? iArg.number : 1;
+  const j = jArg instanceof NumberValue ? jArg.number : i;
+
+  const startIndex = i < 0 ? Math.max(0, strLength + i) : i - 1;
+  const endIndex = j < 0 ? strLength + j + 1 : j;
+
+  const result: Value[] = [];
+  for (let k = startIndex; k < endIndex && k < strLength; k++) {
+    result.push(NumberValue.from(s.string.charCodeAt(k)));
+  }
+
+  return result; //.length > 0 ? result : [new NilValue()];
+}
+
+function char(args: Value[]): Value[] {
+  let result = '';
+  const nArgs = countRegularArguments(args);
+  for (let i = 0; i < nArgs; i++) {
+    const arg = args[i];
+    if (arg instanceof NilValue) {
+      continue;
+    }
+    const n = requestNumber(
+      args,
+      i,
+      `bad argument #${i + 1} to 'char' (number expected)`
+    );
+    result += String.fromCharCode(n.number);
+  }
+  return [StringValue.from(result)];
+}
+
 function format(args: Value[]): Value[] {
   const formatStr = requestString(args).string;
   let argIndex = 1;
@@ -295,6 +334,8 @@ function format(args: Value[]): Value[] {
 }
 
 const functions = new TableValue();
+functions.set(StringValue.from('byte'), ExtFunction.of(byte));
+functions.set(StringValue.from('char'), ExtFunction.of(char));
 functions.set(StringValue.from('find'), ExtFunction.of(find));
 functions.set(StringValue.from('format'), ExtFunction.of(format));
 functions.set(StringValue.from('gsub'), ExtFunction.WithInterpreter(gsub));

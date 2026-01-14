@@ -984,7 +984,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
       value = firstValue(value);
       const child = ctx.getChild(i);
       const childText = child.getText();
-      if ((value instanceof StringValue) && childText === ':'){
+      if (value instanceof StringValue && childText === ':') {
         break;
       }
       if (!(value instanceof TableValue)) {
@@ -1068,7 +1068,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
         globalScope = globalScope.parent();
       }
       const stringsTable = globalScope.get(stringLibName);
-      if(!(stringsTable instanceof TableValue)) {
+      if (!(stringsTable instanceof TableValue)) {
         throw new RuntimeError(
           `expect table for global ${stringLibName}. Is stdlib provided?`,
           new TraceFrame(ctx, this.currentScope)
