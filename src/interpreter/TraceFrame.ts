@@ -36,6 +36,6 @@ export class TraceFrame implements Readonly<TraceLocation> {
     }
   }
   toString() {
-    return `${this.filename}:${this.line}:${this.column}`;
+    return `${this.filename}:${this.line}:${this.column}${this.info ? ' (' + this.info + ')' : ''}`;
   }
 }
