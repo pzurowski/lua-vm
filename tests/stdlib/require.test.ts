@@ -182,7 +182,7 @@ describe('require', () => {
       require('./one/two/b')
     `;
     const luaPackageB = `
-      require('../three/c/c/c')
+      require('c')
     `;
     const luaPackageC = `
       require('../ddd')
@@ -198,8 +198,8 @@ describe('require', () => {
       (p: string) =>
         ({
           '/one/two/b': luaPackageB,
-          '/one/three/c/c/c': luaPackageC,
-          '/one/three/c/ddd': luaPackageD,
+          '/one/two/c': luaPackageC,
+          '/one/ddd': luaPackageD,
         })[p] ?? luaNotLoadable
     );
 
@@ -209,8 +209,8 @@ describe('require', () => {
       .executeOnce(lua);
 
     expect(packageContentLoader).nthCalledWith(1, '/one/two/b');
-    expect(packageContentLoader).nthCalledWith(2, '/one/three/c/c/c');
-    expect(packageContentLoader).nthCalledWith(3, '/one/three/c/ddd');
+    expect(packageContentLoader).nthCalledWith(2, '/one/two/c');
+    expect(packageContentLoader).nthCalledWith(3, '/one/ddd');
   });
 
   test('module not found error', () => {

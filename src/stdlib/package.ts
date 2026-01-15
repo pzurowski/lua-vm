@@ -181,7 +181,7 @@ export function createPackageLib(
     const rawModuleName = requestString(args);
     const interpreter = requestInterpreter(args);
 
-    if (!rawModuleName.string.startsWith('.')) {
+    if (rawModuleName.string.startsWith('/')) {
       return [new NilValue()];
     }
     const currentPackageNameRaw = interpreter.interpreter.getGlobalVar(__name);
