@@ -7,6 +7,7 @@ import {
 } from '@src/interpreter/types';
 import { VMBuilder } from '@src/vm';
 import { expectToBeString } from '@tests/interpreter/test_utils';
+import { TableValue } from '../../src';
 
 test('concat', () => {
   const lua = `
@@ -124,4 +125,18 @@ test('sort with external comparator', () => {
   vm.setLuaVar(StringValue.from('c'), ExtFunction.of(c));
   const result = vm.executeOnce(lua);
   expectToBeString(result.globalVar('list'), '5,4,3,2,1');
+});
+
+test('table assignment and access with dynamic key', () => {
+  const lua = `
+    function makeKey(s) return 'foo' .. s; end
+    t = {}
+    t[makeKey('')] = t[makeKey('baz')] or 'bar'   
+  `;
+  const vm = new VMBuilder().witStdLib().build();
+  const result = vm.executeOnce(lua);
+  expectToBeString(
+    (result.globalVar('t') as TableValue).get(StringValue.from('foo')),
+    'bar'
+  );
 });

@@ -999,7 +999,7 @@ export default class LuaInterpreter extends LuaParserVisitor<Value> {
         nameIndex++;
         i += 2;
       } else if (childText === '[') {
-        key = exps[expIndex].accept(this);
+        key = firstValue(exps[expIndex].accept(this));
         expIndex++;
         i += 3;
       } else {
