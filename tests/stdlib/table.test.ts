@@ -36,6 +36,10 @@ test('insert', () => {
     t4 = table.concat(table4, ",")
     table5 = table.insert({"a", "b", "c"}, 4, "d");
     t5 = table.concat(table5, ",")
+    table6 = table.insert({"a", "b"}, nil);
+    t6 = table.concat(table6, ",")
+    table7 = table.insert({"a", "b"}, 1, nil);
+    t7 = table.concat(table7, ",")
     t = {"x", "y", "z"}
     table.insert(t, "w");
     tt = table.concat(t, ",")
@@ -47,6 +51,8 @@ test('insert', () => {
   expectToBeString(result.globalVar('t3'), 'd,a,b,c');
   expectToBeString(result.globalVar('t4'), 'a,b,d,c');
   expectToBeString(result.globalVar('t5'), 'a,b,c,d');
+  expectToBeString(result.globalVar('t6'), 'a,b');
+  expectToBeString(result.globalVar('t7'), 'a,b');
   expectToBeString(result.globalVar('tt'), 'x,y,z,w');
 });
 
@@ -127,9 +133,9 @@ test('sort with external comparator', () => {
   expectToBeString(result.globalVar('list'), '5,4,3,2,1');
 });
 
-test('table assignment and access with dynamic key', () => {
+test('table assignment with dynamic ke', () => {
   const lua = `
-    function makeKey(s) return 'foo' .. s; end
+    function makeKey(s) return 'foo' + s; end
     t = {}
     t[makeKey('')] = t[makeKey('baz')] or 'bar'   
   `;

@@ -70,20 +70,20 @@ function insert(args: Value[]): Value[] {
   const b = getOrNil(args, 2);
   if (a instanceof NumberValue) {
     const pos = a.number;
+    if (b instanceof NilValue) {
+      return [table];
+    }
     if (pos < 1 || pos > list.length + 1) {
       throw new ExtFunctionError(
         `pos has to be in [1..${list.length + 1}] inteval`
       );
-    }
-    if (b instanceof NilValue) {
-      throw new ExtFunctionError("value can't be nil");
     }
     list.splice(pos - 1, 0, b);
     return [listToTable(table, list)];
   } else {
     const pos = list.length;
     if (a instanceof NilValue) {
-      throw new ExtFunctionError("value can't be nil");
+      return [table];
     }
     list.splice(pos, 0, a);
     return [listToTable(table, list)];
