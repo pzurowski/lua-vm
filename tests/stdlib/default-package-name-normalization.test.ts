@@ -7,8 +7,12 @@ describe('defaultPackageNameNormalization', () => {
     );
   });
 
-  it('should remove the last segment of the first part when joining a relative second part', () => {
+  it('should remove the last segment of the first part when joining a relative second part whn base does not end with /', () => {
     expect(packageNameNormalize('/a/b/c', 'd')).toBe('/a/b/d');
+  });
+
+  it('should not remove the last segment of the first part when joining a relative second part when base ends with /', () => {
+    expect(packageNameNormalize('/a/b/c/', 'd')).toBe('/a/b/c/d');
   });
 
   it('should handle ".." by moving up from the parent directory of the first part', () => {

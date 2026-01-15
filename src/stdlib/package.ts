@@ -36,7 +36,9 @@ export const packageNameNormalize = (base: string, path: string) => {
           stack.push(part);
       }
     }
-    stack.pop();
+    if (!base.endsWith('/')) {
+      stack.pop();
+    }
   }
 
   const pathParts = path.split('/');
