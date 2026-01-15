@@ -19,22 +19,28 @@ import {
 import { __name } from '@src/interpreter/consts';
 import { TraceFrame } from '@src/interpreter/TraceFrame';
 
-export type PackageNameNormalize = (
-  packageNamePart1: string,
-  packageNamePart2: string
-) => string;
-
-export const defaultPackageNameNormalization: PackageNameNormalize = (a, b) => {
+export const packageNameNormalize = (base: string, path: string) => {
   const stack: string[] = [];
 
-  if (!b.startsWith('/')) {
-    const [_, ...aParts] = a.split('/');
-    stack.push(...aParts);
+  if (!path.startsWith('/')) {
+    const [_, ...baseParts] = base.split('/');
+    for (const part of baseParts) {
+      switch (part) {
+        case '':
+        case '.':
+          continue;
+        case '..':
+          stack.pop();
+          continue;
+        default:
+          stack.push(part);
+      }
+    }
     stack.pop();
   }
 
-  const bParts = b.split('/');
-  for (const part of bParts) {
+  const pathParts = path.split('/');
+  for (const part of pathParts) {
     switch (part) {
       case '':
       case '.':
@@ -52,8 +58,7 @@ export const defaultPackageNameNormalization: PackageNameNormalize = (a, b) => {
 
 export function createPackageLib(
   loadFile: (packageName: string) => string,
-  fileExists: (packageName: string) => boolean,
-  normalizeNameCallback: PackageNameNormalize = defaultPackageNameNormalization
+  fileExists: (packageName: string) => boolean
 ) {
   const loaded = new TableValue();
   const searchers = new TableValue();
@@ -167,7 +172,7 @@ export function createPackageLib(
     if (!rawModuleName.string.startsWith('/')) {
       return [new NilValue()];
     }
-    const moduleName = normalizeNameCallback('', rawModuleName.string);
+    const moduleName = packageNameNormalize('', rawModuleName.string);
 
     return wrapSearcherResult(moduleName);
   }
@@ -184,7 +189,7 @@ export function createPackageLib(
       currentPackageNameRaw instanceof StringValue
         ? currentPackageNameRaw.string
         : '/';
-    const moduleName = normalizeNameCallback(
+    const moduleName = packageNameNormalize(
       currentPackageName,
       rawModuleName.string
     );
@@ -206,7 +211,10 @@ export function createPackageLib(
       .toString()
       .split(/;/);
     for (const path of packagePath) {
-      const moduleName = normalizeNameCallback(path, rawModuleName.string);
+      if (!path.startsWith('/')) {
+        continue;
+      }
+      const moduleName = packageNameNormalize(path, rawModuleName.string);
       const result = wrapSearcherResult(moduleName);
       if (!(result[0] instanceof NilValue)) {
         return result;

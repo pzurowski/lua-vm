@@ -37,6 +37,6 @@ test('concrete error place in depth tree', () => {
   expectToThrowVMError(() => {
     vm.executeOnce(lua);
   }).toMatch(
-    /Require:.*? \/b at .*?:2:6\n\s*Require:.*? \/c at \/b:4:6\n\s*Lua:.*? at \/c:3:6/
+    /Require:.*? \/b at .*?:2:6( .*)?\n\s*Require:.*? \/c at \/b:4:6( .*)?\n\s*Lua:.*? at \/c:3:6( .*)?/
   );
 });

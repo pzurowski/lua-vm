@@ -177,6 +177,42 @@ describe('require', () => {
     expectToBeString(loaded.get(StringValue.from('/c')), 'xyz');
   });
 
+  test('require packages across relative paths', () => {
+    const lua = `
+      require('./one/two/b')
+    `;
+    const luaPackageB = `
+      require('../three/c/c/c')
+    `;
+    const luaPackageC = `
+      require('../ddd')
+    `;
+    const luaPackageD = `
+      return "xyz";
+    `;
+    const luaNotLoadable = `
+      should fail here
+    `;
+
+    const packageContentLoader = jest.fn().mockImplementation(
+      (p: string) =>
+        ({
+          '/one/two/b': luaPackageB,
+          '/one/three/c/c/c': luaPackageC,
+          '/one/three/c/ddd': luaPackageD,
+        })[p] ?? luaNotLoadable
+    );
+
+    new VMBuilder()
+      .withRequire(packageContentLoader, () => true)
+      .build()
+      .executeOnce(lua);
+
+    expect(packageContentLoader).nthCalledWith(1, '/one/two/b');
+    expect(packageContentLoader).nthCalledWith(2, '/one/three/c/c/c');
+    expect(packageContentLoader).nthCalledWith(3, '/one/three/c/ddd');
+  });
+
   test('module not found error', () => {
     const lua = `
       require('nonexistent')
