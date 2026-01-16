@@ -81,26 +81,19 @@ function next(args: Value[]): Value[] {
 
 function pairs(args: Value[]): Value[] {
   const table = requestTableOrNil(args);
-  const keys = table instanceof TableValue ? table.getKeys() : [];
+  const keys = table instanceof TableValue ? table.getKeys().reverse() : [];
   return [ExtFunction.of(next), table, new NilValue()];
 
   function next(args: Value[]): Value[] {
-    const nextTable = requestTable(args, 0);
-    const nextIndex = requestNumberOrNil(args, 1);
-
-    if (
-      (nextIndex instanceof NumberValue && nextIndex.number >= keys.length) ||
-      (nextIndex instanceof NilValue && keys.length === 0)
-    ) {
+    void args;
+    if (!(table instanceof TableValue) || keys.length === 0) {
       return [new NilValue()];
     }
-    if (nextIndex instanceof NilValue) {
-      return [NumberValue.from(1), nextTable.get(keys[0])];
+    const key = keys.pop();
+    if (!key) {
+      throw new ExtFunctionError('should not happen');
     }
-    return [
-      NumberValue.from(nextIndex.number + 1),
-      nextTable.get(keys[nextIndex.number]),
-    ];
+    return [key, table.get(key)];
   }
 }
 

@@ -115,6 +115,21 @@ test('pairs', () => {
   expectToBeString(result.returnValueAsList()[1], 'abc');
 });
 
+test('pairs over non-arraylike table', () => {
+  const lua = `
+          t = {x = 'a', y = 'b', z = 'c'}
+          s = ""
+          for k, v in pairs(t) do
+            s = s .. k .. v
+          end
+          return s
+          `;
+  const result = new VMBuilder().witStdLib().build().executeOnce(lua);
+  expect(result.hasReturnValue()).toBeTruthy();
+  expect(result.returnValueAsList().length).toBe(1);
+  expectToBeString(result.returnValueAsList()[0], 'xaybzc');
+});
+
 test('pcall with no function', () => {
   const lua = `
     a = 100
