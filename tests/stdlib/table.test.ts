@@ -135,7 +135,7 @@ test('sort with external comparator', () => {
 
 test('table assignment with dynamic ke', () => {
   const lua = `
-    function makeKey(s) return 'foo' + s; end
+    function makeKey(s) return 'foo' .. s; end
     t = {}
     t[makeKey('')] = t[makeKey('baz')] or 'bar'   
   `;
