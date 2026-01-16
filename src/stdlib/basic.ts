@@ -16,6 +16,9 @@ import {
   isFalse,
   requestContext,
   requestInterpreter,
+  requestNumberOrNil,
+  requestTable,
+  requestTableOrNil,
 } from '@src/interpreter/utils';
 
 function assert(args: Value[]): Value[] {
@@ -77,7 +80,28 @@ function next(args: Value[]): Value[] {
 }
 
 function pairs(args: Value[]): Value[] {
-  return [ExtFunction.of(next), getOrNil(args, 0), new NilValue()];
+  const table = requestTableOrNil(args);
+  const keys = table instanceof TableValue ? table.getKeys() : [];
+  return [ExtFunction.of(next), table, new NilValue()];
+
+  function next(args: Value[]): Value[] {
+    const nextTable = requestTable(args, 0);
+    const nextIndex = requestNumberOrNil(args, 1);
+
+    if (
+      (nextIndex instanceof NumberValue && nextIndex.number >= keys.length) ||
+      (nextIndex instanceof NilValue && keys.length === 0)
+    ) {
+      return [new NilValue()];
+    }
+    if (nextIndex instanceof NilValue) {
+      return [NumberValue.from(1), nextTable.get(keys[0])];
+    }
+    return [
+      NumberValue.from(nextIndex.number + 1),
+      nextTable.get(keys[nextIndex.number]),
+    ];
+  }
 }
 
 function pcall(args: Value[]): Value[] {
