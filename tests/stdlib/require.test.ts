@@ -1,4 +1,5 @@
 import {
+  expectToBeBool,
   expectToBeNil,
   expectToBeNumber,
   expectToBeString,
@@ -172,7 +173,7 @@ describe('require', () => {
     expect(packageContentLoader).nthCalledWith(1, '/b');
     expect(packageContentLoader).nthCalledWith(2, '/c');
     expect(loaded.hasKey(StringValue.from('/b'))).toBe(true);
-    expectToBeNil(loaded.get(StringValue.from('/b')));
+    expectToBeBool(loaded.get(StringValue.from('/b')), true);
     expect(loaded.hasKey(StringValue.from('/c'))).toBe(true);
     expectToBeString(loaded.get(StringValue.from('/c')), 'xyz');
   });

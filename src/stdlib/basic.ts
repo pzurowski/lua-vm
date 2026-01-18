@@ -16,8 +16,6 @@ import {
   isFalse,
   requestContext,
   requestInterpreter,
-  requestNumberOrNil,
-  requestTable,
   requestTableOrNil,
 } from '@src/interpreter/utils';
 

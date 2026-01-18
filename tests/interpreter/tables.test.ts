@@ -6,6 +6,7 @@ import {
 } from './test_utils';
 import {
   FunctionValue,
+  NilValue,
   NumberValue,
   StringValue,
   TableValue,
@@ -119,4 +120,64 @@ test('init function to table', () => {
   expect(result.hasReturnValue()).toBeTruthy();
   expect(result.returnValueAsList()[0]).toBeInstanceOf(FunctionValue);
   expectToBeNumber(result.returnValueAsList()[1], 100);
+});
+
+describe('Table deletion on nil assignment', () => {
+  test('setting value to nil should remove the key', () => {
+    const lua = `
+      t = {key = "value"}
+      before_size = #t
+      t.key = nil
+      after_size = #t
+      return t, before_size, after_size
+    `;
+    const result = new VMBuilder().build().executeOnce(lua);
+    const returnList = result.returnValueAsList();
+    const table = returnList[0] as TableValue;
+
+    expectToBeNumber(returnList[1], 1);
+    expect(table.hasKey(StringValue.from('key'))).toBeFalsy();
+    expectToBeNil(table.get(StringValue.from('key')));
+  });
+
+  test('TableValue.set(key, nil) should remove the key internally', () => {
+    const table = new TableValue();
+    const key = StringValue.from('key');
+    const value = StringValue.from('value');
+
+    table.set(key, value);
+    expect(table.hasKey(key)).toBeTruthy();
+    expect(table.size()).toBe(1);
+
+    table.set(key, new NilValue());
+    expect(table.hasKey(key)).toBeFalsy();
+    expect(table.size()).toBe(0);
+  });
+
+  test('TableValue.mergeInWithOverride should not copy nil values', () => {
+    const table1 = new TableValue();
+    table1.set(StringValue.from('a'), NumberValue.from(1));
+
+    const table2 = new TableValue();
+    table2.set(StringValue.from('a'), new NilValue());
+    expect(table2.size()).toBe(0);
+
+    table1.mergeInWithOverride(table2);
+    expectToBeNumber(table1.get(StringValue.from('a')), 1);
+  });
+
+  test('setting multiple keys to nil', () => {
+    const lua = `
+      t = {a = 1, b = 2, c = 3}
+      t.a = nil
+      t.b = nil
+      return t, #t
+    `;
+    const result = new VMBuilder().build().executeOnce(lua);
+    const table = result.returnValueAsList()[0] as TableValue;
+    expect(table.size()).toBe(1);
+    expect(table.hasKey(StringValue.from('c'))).toBeTruthy();
+    expect(table.hasKey(StringValue.from('a'))).toBeFalsy();
+    expect(table.hasKey(StringValue.from('b'))).toBeFalsy();
+  });
 });

@@ -119,8 +119,17 @@ class TableValue extends Value {
     return keys;
   }
 
+  forceSetNilValueForGivenKey(key: Value) {
+    if (key instanceof NilValue) return;
+    this._table.set(key.asIdString(), [key, new NilValue()]);
+  }
+
   set(key: Value, value: Value): void {
     if (key instanceof NilValue) return;
+    if (value instanceof NilValue) {
+      this._table.delete(key.asIdString());
+      return;
+    }
     this._table.set(key.asIdString(), [key, value]);
   }
 

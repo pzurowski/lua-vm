@@ -1,6 +1,7 @@
 import { ExtFunctionError, RequireError } from '@src/interpreter/errors';
 import ExtFunction from '@src/interpreter/ExtFunction';
 import {
+  BooleanValue,
   FunctionValue,
   InternalListValue,
   NilValue,
@@ -144,7 +145,10 @@ export function createPackageLib(
           loaded.get(resolvedModuleName) instanceof NilValue &&
           loaderResult instanceof InternalListValue
         ) {
-          loaded.set(resolvedModuleName, loaderResult.getValueOrNil(1));
+          const valueOrNil = loaderResult.getValueOrNil(1);
+          const valueOrTrue =
+            valueOrNil instanceof NilValue ? BooleanValue.true() : valueOrNil;
+          loaded.set(resolvedModuleName, valueOrTrue);
         }
       }
       return [loaded.get(resolvedModuleName)];

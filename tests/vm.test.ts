@@ -36,6 +36,7 @@ test('vm assignments and scopes', () => {
     q, w = 1
     i = 42, 90
     do
+      local p = 9
       local x,c
       x,c = 3,4
       c = 100
@@ -44,6 +45,7 @@ test('vm assignments and scopes', () => {
     z = 90
     `;
   const result = new VMBuilder().build().executeOnce(lua);
+  expect(result.globalVar('p')).toBeInstanceOf(NilValue);
   expect(result.globalVar('x')).toBeInstanceOf(NilValue);
   expect(result.globalVar('w')).toBeInstanceOf(NilValue);
   expectToBeNumber(result.globalVar('a'), 1);

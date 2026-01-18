@@ -50,6 +50,10 @@ export default class VisibilityScope {
   }
 
   setLocal(key: Value, value: Value): void {
+    if (value instanceof NilValue) {
+      this.env.forceSetNilValueForGivenKey(key);
+      return;
+    }
     this.env.set(key, value);
   }
 
